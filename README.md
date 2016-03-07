@@ -1,6 +1,6 @@
 # ImagePickerController
 
- ![image](https://github.com/ZhuoChenMing/ImageCropper/blob/master/sc.jpg)
+ ![image](https://github.com/ZhuoChenMing/ImageCropper/blob/master/sc.png)
  
  
  详细用法 demo里有
