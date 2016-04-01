@@ -203,10 +203,6 @@
 }
 
 - (void)okButtonClick {
-    if (_selectedPhotoArray.count == 0) {
-        PhotoPickerModel *model = _photoArray[_currentIndex];
-        [_selectedPhotoArray addObject:model];
-    }
     if (self.okButtonClickBlock) {
         self.okButtonClickBlock(self.selectedPhotoArray, _isSelectOriginalPhoto);
     }
