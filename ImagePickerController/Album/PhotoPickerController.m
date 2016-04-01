@@ -238,7 +238,10 @@ static CGSize AssetGridThumbnailSize;
             if (info) [infoArr replaceObjectAtIndex:i withObject:info];
             if (_isSelectOriginalPhoto) [assets replaceObjectAtIndex:i withObject:model.asset];
 
-            for (id item in photos) { if ([item isKindOfClass:[NSNumber class]]) return; }
+            for (id item in photos) {
+                if ([item isKindOfClass:[NSNumber class]])
+                    return;
+            }
             
             if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
                 [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
@@ -358,27 +361,25 @@ static CGSize AssetGridThumbnailSize;
     photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
     photoPreviewVc.selectedPhotoArray = self.selectedPhotoArr;
     
-    __block PhotoPickerController *weakSelf = self;
     photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        weakSelf.selectedPhotoArr = newSelectedPhotoArr;
-        weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
-        [weakSelf.collectionView reloadData];
-        [weakSelf refreshBottomToolBarStatus];
+        self.selectedPhotoArr = newSelectedPhotoArr;
+        self.isSelectOriginalPhoto = isSelectOriginalPhoto;
+        [self.collectionView reloadData];
+        [self refreshBottomToolBarStatus];
     };
     photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto){
         if (newSelectedPhotoArr.count != 0) {
-            weakSelf.selectedPhotoArr = newSelectedPhotoArr;
-            weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
-            [weakSelf okButtonClick];
+            self.selectedPhotoArr = newSelectedPhotoArr;
+            self.isSelectOriginalPhoto = isSelectOriginalPhoto;
+            [self okButtonClick];
         }
     };
     [self.navigationController pushViewController:photoPreviewVc animated:YES];
 }
 
 - (void)getSelectedPhotoBytes {
-    __block PhotoPickerController *weakSelf = self;
     [[AlbumAllMedia manager] getPhotosBytesWithArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
-        weakSelf.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 
@@ -409,12 +410,11 @@ static CGSize AssetGridThumbnailSize;
         NSMutableArray *addedIndexPaths = [NSMutableArray array];
         NSMutableArray *removedIndexPaths = [NSMutableArray array];
         
-        __block PhotoPickerController *waekSelf = self;
         [self computeDifferenceBetweenRect:self.previousPreheatRect andRect:preheatRect removedHandler:^(CGRect removedRect) {
-            NSArray *indexPaths = [waekSelf aapl_indexPathsForElementsInRect:removedRect];
+            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:removedRect];
             [removedIndexPaths addObjectsFromArray:indexPaths];
         } addedHandler:^(CGRect addedRect) {
-            NSArray *indexPaths = [waekSelf aapl_indexPathsForElementsInRect:addedRect];
+            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:addedRect];
             [addedIndexPaths addObjectsFromArray:indexPaths];
         }];
         

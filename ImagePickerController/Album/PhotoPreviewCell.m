@@ -66,10 +66,9 @@
     _model = model;
     [self.scrollView setZoomScale:1.0 animated:NO];
     
-    __block PhotoPreviewCell *weakSelf = self;
     [[AlbumAllMedia manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-        weakSelf.imageView.image = photo;
-        [weakSelf autouLayoutImageView];
+        self.imageView.image = photo;
+        [self autouLayoutImageView];
     }];
 }
 

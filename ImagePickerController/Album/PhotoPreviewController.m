@@ -235,7 +235,7 @@
     PhotoPreviewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"PhotoPreviewCell" forIndexPath:indexPath];
     cell.model = _photoArray[indexPath.row];
 
-    __block PhotoPreviewController *weakSelf = self;
+    __weak PhotoPreviewController *weakSelf = self;
     
 //    cell.singleTapGestureBlock = ^() {
 //        weakSelf.isHideNaviBar = NO;
@@ -265,11 +265,15 @@
     
     _originalPhotoButton.selected = _isSelectOriginalPhoto;
     _originalPhotoLable.hidden = !_originalPhotoButton.isSelected;
-    if (_isSelectOriginalPhoto) [self showPhotoBytes];
+    if (_isSelectOriginalPhoto) {
+        [self showPhotoBytes];
+    }
     
     // If is previewing video, hide original photo button
     // 如果正在预览的是视频，隐藏原图按钮
-    if (_isHideNaviBar) return;
+    if (_isHideNaviBar) {
+        return;
+    }
     if (model.type == AlbumModelMediaTypeVideo) {
         _originalPhotoButton.hidden = YES;
         _originalPhotoLable.hidden = YES;
@@ -280,9 +284,8 @@
 }
 
 - (void)showPhotoBytes {
-    __block PhotoPreviewController *weakSelf = self;
     [[AlbumAllMedia manager] getPhotosBytesWithArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
-        weakSelf.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 
