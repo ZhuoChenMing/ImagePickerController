@@ -246,14 +246,12 @@
     
     cell.doubleTapGestureBlock = ^() {
         weakSelf.isHideNaviBar = !weakSelf.isHideNaviBar;
-        weakSelf.toolBarView.hidden = _isHideNaviBar;
+        weakSelf.toolBarView.hidden = weakSelf.isHideNaviBar;
         
-        [[UIApplication sharedApplication] setStatusBarHidden:_isHideNaviBar withAnimation:UIStatusBarAnimationSlide];
+        [[UIApplication sharedApplication] setStatusBarHidden:weakSelf.isHideNaviBar withAnimation:UIStatusBarAnimationSlide];
         
-        [weakSelf.navigationController setNavigationBarHidden:_isHideNaviBar animated:YES];
+        [weakSelf.navigationController setNavigationBarHidden:weakSelf.isHideNaviBar animated:YES];
     };
-    
-
     return cell;
 }
 
@@ -282,8 +280,9 @@
 }
 
 - (void)showPhotoBytes {
+    __block PhotoPreviewController *weakSelf = self;
     [[AlbumAllMedia manager] getPhotosBytesWithArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
-        _originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        weakSelf.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 

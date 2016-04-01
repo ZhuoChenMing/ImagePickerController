@@ -289,7 +289,9 @@
 }
 
 - (void)getPhotoWithAsset:(id)asset photoWidth:(CGFloat)photoWidth completion:(void (^)(UIImage *, NSDictionary *, BOOL isDegraded))completion {
-    if (photoWidth > 600) photoWidth = 600.0;
+    if (photoWidth > 600) {
+        photoWidth = 600.0;
+    }
     if ([asset isKindOfClass:[PHAsset class]]) {
         PHAsset *phAsset = (PHAsset *)asset;
         CGFloat aspectRatio = phAsset.pixelWidth / (CGFloat)phAsset.pixelHeight;

@@ -35,6 +35,7 @@
 }
 
 - (void)configMoviePlayer {
+    
     [[AlbumAllMedia manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         _cover = photo;
     }];
@@ -53,14 +54,14 @@
 }
 
 /// Show progress，do it next time / 给播放器添加进度更新,下次加上
--(void)addProgressObserver{
+-(void)addProgressObserver {
     AVPlayerItem *playerItem = _player.currentItem;
     UIProgressView *progress = _progress;
     [_player addPeriodicTimeObserverForInterval:CMTimeMake(1.0, 1.0) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
         float current = CMTimeGetSeconds(time);
         float total = CMTimeGetSeconds([playerItem duration]);
         if (current) {
-            [progress setProgress:(current/total) animated:YES];
+            [progress setProgress:(current / total) animated:YES];
         }
     }];
 }
@@ -93,17 +94,20 @@
 }
 
 #pragma mark - Click Event
-
 - (void)playButtonClick {
     CMTime currentTime = _player.currentItem.currentTime;
     CMTime durationTime = _player.currentItem.duration;
     if (_player.rate == 0.0f) {
-        if (currentTime.value == durationTime.value) [_player.currentItem seekToTime:CMTimeMake(0, 1)];
+        if (currentTime.value == durationTime.value) {
+            [_player.currentItem seekToTime:CMTimeMake(0, 1)];
+        }
         [_player play];
         [self.navigationController setNavigationBarHidden:YES];
         _toolBar.hidden = YES;
         [_playButton setImage:nil forState:UIControlStateNormal];
-        if (iOS7Later) [UIApplication sharedApplication].statusBarHidden = YES;
+        if (iOS7Later) {
+            [UIApplication sharedApplication].statusBarHidden = YES;
+        }
     } else {
         [self pausePlayerAndShowNaviBar];
     }

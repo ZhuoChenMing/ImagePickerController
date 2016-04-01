@@ -17,22 +17,21 @@
 #import "AlbumAllMedia.h"
 #import "VideoPlayerController.h"
 
-@interface PhotoPickerController ()<UICollectionViewDataSource, UICollectionViewDelegate> {
-    UICollectionView *_collectionView;
-    NSMutableArray *_photoArr;
-    
-    UIButton *_previewButton;
-    UIButton *_okButton;
-    UIImageView *_numberImageView;
-    UILabel *_numberLable;
-    UIButton *_originalPhotoButton;
-    UILabel *_originalPhotoLable;
-    
-    BOOL _isSelectOriginalPhoto;
-    BOOL _shouldScrollToBottom;
-}
+@interface PhotoPickerController ()<UICollectionViewDataSource, UICollectionViewDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
+
+@property (nonatomic, strong) NSMutableArray *photoArr;
+
+@property (nonatomic, strong) UIButton *previewButton;
+@property (nonatomic, strong) UIButton *okButton;
+@property (nonatomic, strong) UIImageView *numberImageView;
+@property (nonatomic, strong) UILabel *numberLable;
+@property (nonatomic, strong) UIButton *originalPhotoButton;
+@property (nonatomic, strong) UILabel *originalPhotoLable;
+
+@property (nonatomic, assign) BOOL isSelectOriginalPhoto;
+@property (nonatomic, assign) BOOL shouldScrollToBottom;
 
 @property (nonatomic, strong) NSMutableArray *selectedPhotoArr;
 
@@ -358,25 +357,28 @@ static CGSize AssetGridThumbnailSize;
 - (void)pushPhotoPrevireViewController:(PhotoPreviewController *)photoPreviewVc {
     photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
     photoPreviewVc.selectedPhotoArray = self.selectedPhotoArr;
+    
+    __block PhotoPickerController *weakSelf = self;
     photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        _selectedPhotoArr = newSelectedPhotoArr;
-        _isSelectOriginalPhoto = isSelectOriginalPhoto;
-        [_collectionView reloadData];
-        [self refreshBottomToolBarStatus];
+        weakSelf.selectedPhotoArr = newSelectedPhotoArr;
+        weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
+        [weakSelf.collectionView reloadData];
+        [weakSelf refreshBottomToolBarStatus];
     };
     photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto){
         if (newSelectedPhotoArr.count != 0) {
-            _selectedPhotoArr = newSelectedPhotoArr;
-            _isSelectOriginalPhoto = isSelectOriginalPhoto;
-            [self okButtonClick];
+            weakSelf.selectedPhotoArr = newSelectedPhotoArr;
+            weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
+            [weakSelf okButtonClick];
         }
     };
     [self.navigationController pushViewController:photoPreviewVc animated:YES];
 }
 
 - (void)getSelectedPhotoBytes {
+    __block PhotoPickerController *weakSelf = self;
     [[AlbumAllMedia manager] getPhotosBytesWithArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
-        _originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        weakSelf.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 
@@ -388,7 +390,9 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)updateCachedAssets {
     BOOL isViewVisible = [self isViewLoaded] && [[self view] window] != nil;
-    if (!isViewVisible) { return; }
+    if (!isViewVisible) {
+        return;
+    }
     
     // The preheat window is twice the height of the visible rect.
     CGRect preheatRect = _collectionView.bounds;
@@ -405,11 +409,12 @@ static CGSize AssetGridThumbnailSize;
         NSMutableArray *addedIndexPaths = [NSMutableArray array];
         NSMutableArray *removedIndexPaths = [NSMutableArray array];
         
+        __block PhotoPickerController *waekSelf = self;
         [self computeDifferenceBetweenRect:self.previousPreheatRect andRect:preheatRect removedHandler:^(CGRect removedRect) {
-            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:removedRect];
+            NSArray *indexPaths = [waekSelf aapl_indexPathsForElementsInRect:removedRect];
             [removedIndexPaths addObjectsFromArray:indexPaths];
         } addedHandler:^(CGRect addedRect) {
-            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:addedRect];
+            NSArray *indexPaths = [waekSelf aapl_indexPathsForElementsInRect:addedRect];
             [addedIndexPaths addObjectsFromArray:indexPaths];
         }];
         
@@ -417,14 +422,8 @@ static CGSize AssetGridThumbnailSize;
         NSArray *assetsToStopCaching = [self assetsAtIndexPaths:removedIndexPaths];
         
         // Update the assets the PHCachingImageManager is caching.
-        [[AlbumAllMedia manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching
-                                            targetSize:AssetGridThumbnailSize
-                                           contentMode:PHImageContentModeAspectFill
-                                               options:nil];
-        [[AlbumAllMedia manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching
-                                           targetSize:AssetGridThumbnailSize
-                                          contentMode:PHImageContentModeAspectFill
-                                              options:nil];
+        [[AlbumAllMedia manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[AlbumAllMedia manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
         
         // Store the preheat rect to compare against in the future.
         self.previousPreheatRect = preheatRect;
