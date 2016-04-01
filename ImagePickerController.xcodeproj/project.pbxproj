@@ -561,7 +561,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = ImagePickerController/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = www.zhuochenming.com.ImagePickerController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -573,7 +573,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = ImagePickerController/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = www.zhuochenming.com.ImagePickerController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -647,6 +647,7 @@
 				4FF654AF1C8D46D80043CBB6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4FF654B01C8D46D80043CBB6 /* Build configuration list for PBXNativeTarget "ImagePickerControllerTests" */ = {
 			isa = XCConfigurationList;
@@ -655,6 +656,7 @@
 				4FF654B21C8D46D80043CBB6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4FF654B31C8D46D80043CBB6 /* Build configuration list for PBXNativeTarget "ImagePickerControllerUITests" */ = {
 			isa = XCConfigurationList;
@@ -663,6 +665,7 @@
 				4FF654B51C8D46D80043CBB6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

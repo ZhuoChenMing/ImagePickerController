@@ -121,7 +121,6 @@
 }
 
 #pragma mark - Notification Method
-
 - (void)pausePlayerAndShowNaviBar {
     [_player pause];
     _toolBar.hidden = NO;

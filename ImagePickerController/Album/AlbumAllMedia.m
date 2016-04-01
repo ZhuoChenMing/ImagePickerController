@@ -41,9 +41,13 @@
 /// Return YES if Authorized 返回YES如果得到了授权
 - (BOOL)authorizationStatusAuthorized {
     if (iOS8Later) {
-        if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) return YES;
+        if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) {
+            return YES;
+        }
     } else {
-        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) return YES;
+        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+            return YES;
+        }
     }
     return NO;
 }

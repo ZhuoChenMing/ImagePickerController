@@ -16,8 +16,6 @@
 
 @property (nonatomic, assign) BOOL isHideNaviBar;
 
-//@property (nonatomic, strong) UIView *navigationBarView;
-//@property (nonatomic, strong) UIButton *backButton;
 @property (nonatomic, strong) UIButton *selectButton;
 
 @property (nonatomic, strong) UIView *toolBarView;

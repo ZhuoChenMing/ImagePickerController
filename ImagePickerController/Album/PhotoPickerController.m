@@ -359,19 +359,13 @@ static CGSize AssetGridThumbnailSize;
     photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
     photoPreviewVc.selectedPhotoArray = self.selectedPhotoArr;
     photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        
-            _selectedPhotoArr = newSelectedPhotoArr;
-            _isSelectOriginalPhoto = isSelectOriginalPhoto;
-            [_collectionView reloadData];
-            [self refreshBottomToolBarStatus];
-        
+        _selectedPhotoArr = newSelectedPhotoArr;
+        _isSelectOriginalPhoto = isSelectOriginalPhoto;
+        [_collectionView reloadData];
+        [self refreshBottomToolBarStatus];
     };
     photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto){
-        
-        if (newSelectedPhotoArr.count == 0) {
-            [self.collectionView reloadData];
-            [self.navigationController popViewControllerAnimated:YES];
-        } else {
+        if (newSelectedPhotoArr.count != 0) {
             _selectedPhotoArr = newSelectedPhotoArr;
             _isSelectOriginalPhoto = isSelectOriginalPhoto;
             [self okButtonClick];

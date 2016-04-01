@@ -10,7 +10,7 @@
 #import "PhotoPickerModel.h"
 #import "AlbumAllMedia.h"
 
-@interface PhotoPreviewCell ()<UIGestureRecognizerDelegate, UIScrollViewDelegate>
+@interface PhotoPreviewCell ()<UIScrollViewDelegate>
 
 @property (nonatomic, assign) CGFloat aspectRatio;
 
