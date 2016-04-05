@@ -13,6 +13,9 @@
 #import "AlbumListModel.h"
 #import "AlbumListController.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 @interface AlbumAllMedia ()
 
 @property (nonatomic, strong) ALAssetsLibrary *assetLibrary;
@@ -38,7 +41,7 @@
     return _assetLibrary;
 }
 
-/// Return YES if Authorized 返回YES如果得到了授权
+#pragma mark - 返回YES如果得到了授权
 - (BOOL)authorizationStatusAuthorized {
     if (iOS8Later) {
         if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) {
@@ -155,7 +158,9 @@
             timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
             [photoArr addObject:[PhotoPickerModel modelWithAsset:asset type:type timeLength:timeLength]];
         }];
-        if (completion) completion(photoArr);
+        if (completion) {
+            completion(photoArr);
+        }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
         if (!allowPickingVideo) [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
@@ -182,7 +187,7 @@
     }
 }
 
-///  Get asset at index 获得下标为index的单个照片
+#pragma mark - 获得下标为index的单个照片
 - (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index allowPickingVideo:(BOOL)allowPickingVideo completion:(void (^)(PhotoPickerModel *))completion {
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
@@ -281,9 +286,7 @@
     return bytes;
 }
 
-#pragma mark - Get Photo
-
-/// Get photo 获得照片本身
+#pragma mark - 获得照片本身
 - (void)getPhotoWithAsset:(id)asset completion:(void (^)(UIImage *, NSDictionary *, BOOL isDegraded))completion {
     [self getPhotoWithAsset:asset photoWidth:[UIScreen mainScreen].bounds.size.width completion:completion];
 }
@@ -330,7 +333,9 @@
                 UIImage *fullScrennImage = [UIImage imageWithCGImage:fullScrennImageRef scale:1.0 orientation:UIImageOrientationUp];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if (completion) completion(fullScrennImage,nil,NO);
+                    if (completion) {
+                        completion(fullScrennImage, nil, NO);
+                    }
                 });
             });
         }
@@ -364,12 +369,14 @@
         ALAsset *alAsset = (ALAsset *)asset;
         ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
         
-        dispatch_async(dispatch_get_global_queue(0,0), ^{
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
             CGImageRef originalImageRef = [assetRep fullResolutionImage];
             UIImage *originalImage = [UIImage imageWithCGImage:originalImageRef scale:1.0 orientation:UIImageOrientationUp];
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (completion) completion(originalImage,nil);
+                if (completion) {
+                    completion(originalImage, nil);
+                }
             });
         });
     }
@@ -379,7 +386,9 @@
 - (void)getVideoWithAsset:(id)asset completion:(void (^)(AVPlayerItem * _Nullable, NSDictionary * _Nullable))completion {
     if ([asset isKindOfClass:[PHAsset class]]) {
         [[PHImageManager defaultManager] requestPlayerItemForVideo:asset options:nil resultHandler:^(AVPlayerItem * _Nullable playerItem, NSDictionary * _Nullable info) {
-            if (completion) completion(playerItem,info);
+            if (completion) {
+                completion(playerItem, info);
+            }
         }];
     } else if ([asset isKindOfClass:[ALAsset class]]) {
         ALAsset *alAsset = (ALAsset *)asset;
@@ -387,7 +396,9 @@
         NSString *uti = [defaultRepresentation UTI];
         NSURL *videoURL = [[asset valueForProperty:ALAssetPropertyURLs] valueForKey:uti];
         AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithURL:videoURL];
-        if (completion && playerItem) completion(playerItem,nil);
+        if (completion && playerItem) {
+            completion(playerItem, nil);
+        }
     }
 }
 
@@ -409,13 +420,21 @@
 - (NSString *)getNewAlbumName:(NSString *)name {
     if (iOS8Later) {
         NSString *newName;
-        if ([name containsString:@"Roll"])         newName = @"相机胶卷";
-        else if ([name containsString:@"Stream"])  newName = @"我的照片流";
-        else if ([name containsString:@"Added"])   newName = @"最近添加";
-        else if ([name containsString:@"Selfies"]) newName = @"自拍";
-        else if ([name containsString:@"shots"])   newName = @"截屏";
-        else if ([name containsString:@"Videos"])  newName = @"视频";
-        else newName = name;
+        if ([name containsString:@"Roll"]) {
+            newName = @"相机胶卷";
+        } else if ([name containsString:@"Stream"]) {
+            newName = @"我的照片流";
+        } else if ([name containsString:@"Added"]) {
+            newName = @"最近添加";
+        } else if ([name containsString:@"Selfies"]) {
+            newName = @"自拍";
+        } else if ([name containsString:@"shots"]) {
+            newName = @"截屏";
+        } else if ([name containsString:@"Videos"]) {
+            newName = @"视频";
+        } else {
+            newName = name;
+        }
         return newName;
     } else {
         return name;
@@ -431,3 +450,4 @@
 }
 
 @end
+#pragma clang diagnostic pop

@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-#define AlbumListImageWidth 70
+static const CGFloat AlbumListCellHeight = 70.0;
 
 @class AlbumListModel;
 

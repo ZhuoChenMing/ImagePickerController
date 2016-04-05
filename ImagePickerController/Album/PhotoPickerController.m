@@ -23,12 +23,7 @@
 
 @property (nonatomic, strong) NSMutableArray *photoArr;
 
-@property (nonatomic, strong) UIButton *previewButton;
-@property (nonatomic, strong) UIButton *okButton;
-@property (nonatomic, strong) UIImageView *numberImageView;
-@property (nonatomic, strong) UILabel *numberLable;
-@property (nonatomic, strong) UIButton *originalPhotoButton;
-@property (nonatomic, strong) UILabel *originalPhotoLable;
+@property (nonatomic, strong) PhotoToolBarView *toolBarView;
 
 @property (nonatomic, assign) BOOL isSelectOriginalPhoto;
 @property (nonatomic, assign) BOOL shouldScrollToBottom;
@@ -92,85 +87,14 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)configBottomToolBar {
-    
-    CGFloat width = CGRectGetWidth(self.view.frame);
-    CGFloat height = CGRectGetHeight(self.view.frame);
-    
-    UIView *bottomToolBar = [[UIView alloc] initWithFrame:CGRectMake(0, height - 50, width, 50)];
-    CGFloat rgb = 253 / 255.0;
-    bottomToolBar.backgroundColor = [UIColor colorWithRed:rgb green:rgb blue:rgb alpha:1.0];
-    
-    _previewButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _previewButton.frame = CGRectMake(10, 3, 44, 44);
-    [_previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
-    _previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
-    [_previewButton setTitle:@"预览" forState:UIControlStateNormal];
-    [_previewButton setTitle:@"预览" forState:UIControlStateDisabled];
-    [_previewButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [_previewButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
-    _previewButton.enabled = NO;
-    
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    if (navigation.allowPickingOriginalPhoto) {
-        _originalPhotoButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _originalPhotoButton.frame = CGRectMake(50, height - 50, 130, 50);
-        _originalPhotoButton.imageEdgeInsets = UIEdgeInsetsMake(0, -8, 0, 0);
-        _originalPhotoButton.contentEdgeInsets = UIEdgeInsetsMake(0, -45, 0, 0);
-        [_originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
-        _originalPhotoButton.titleLabel.font = [UIFont systemFontOfSize:16];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateNormal];
-        [_originalPhotoButton setTitle:@"原图" forState:UIControlStateSelected];
-        [_originalPhotoButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
-        [_originalPhotoButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-        [_originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_def"] forState:UIControlStateNormal];
-        [_originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_sel"] forState:UIControlStateSelected];
-        _originalPhotoButton.enabled = _selectedPhotoArr.count > 0;
-        
-        _originalPhotoLable = [[UILabel alloc] init];
-        _originalPhotoLable.frame = CGRectMake(70, 0, 60, 50);
-        _originalPhotoLable.textAlignment = NSTextAlignmentLeft;
-        _originalPhotoLable.font = [UIFont systemFontOfSize:16];
-        _originalPhotoLable.textColor = [UIColor blackColor];
-        if (_isSelectOriginalPhoto) [self getSelectedPhotoBytes];
-    }
+    self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:_selectedPhotoArr photoArray:_selectedPhotoArr isHaveOriPhotoButton:YES];
     
-    _okButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _okButton.frame = CGRectMake(width - 44 - 12, 3, 44, 44);
-    _okButton.titleLabel.font = [UIFont systemFontOfSize:16];
-    [_okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
-    [_okButton setTitle:@"确定" forState:UIControlStateNormal];
-    [_okButton setTitle:@"确定" forState:UIControlStateDisabled];
-    [_okButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
-    [_okButton setTitleColor:navigation.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
-    _okButton.enabled = NO;
+    [self.toolBarView.previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.toolBarView.originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.toolBarView.okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
     
-    _numberImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"photo_number_icon"]];
-    _numberImageView.frame = CGRectMake(width - 56 - 24, 12, 26, 26);
-    _numberImageView.hidden = _selectedPhotoArr.count <= 0;
-    _numberImageView.backgroundColor = [UIColor clearColor];
-    
-    _numberLable = [[UILabel alloc] init];
-    _numberLable.frame = _numberImageView.frame;
-    _numberLable.font = [UIFont systemFontOfSize:16];
-    _numberLable.textColor = [UIColor whiteColor];
-    _numberLable.textAlignment = NSTextAlignmentCenter;
-    _numberLable.text = [NSString stringWithFormat:@"%zd", _selectedPhotoArr.count];
-    _numberLable.hidden = _selectedPhotoArr.count <= 0;
-    _numberLable.backgroundColor = [UIColor clearColor];
-    
-    UIView *divide = [[UIView alloc] init];
-    CGFloat rgb2 = 222 / 255.0;
-    divide.backgroundColor = [UIColor colorWithRed:rgb2 green:rgb2 blue:rgb2 alpha:1.0];
-    divide.frame = CGRectMake(0, 0, width, 1);
-
-    [bottomToolBar addSubview:divide];
-    [bottomToolBar addSubview:_previewButton];
-    [bottomToolBar addSubview:_okButton];
-    [bottomToolBar addSubview:_numberImageView];
-    [bottomToolBar addSubview:_numberLable];
-    [self.view addSubview:bottomToolBar];
-    [self.view addSubview:_originalPhotoButton];
-    [_originalPhotoButton addSubview:_originalPhotoLable];
+    [self.view addSubview:_toolBarView];
 }
 
 #pragma mark - 视图将要出现 消失
@@ -212,10 +136,13 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)originalPhotoButtonClick {
-    _originalPhotoButton.selected = !_originalPhotoButton.isSelected;
-    _isSelectOriginalPhoto = _originalPhotoButton.isSelected;
-    _originalPhotoLable.hidden = !_originalPhotoButton.isSelected;
-    if (_isSelectOriginalPhoto) [self getSelectedPhotoBytes];
+     _toolBarView.originalPhotoButton.selected = !_toolBarView.originalPhotoButton.isSelected;
+     _isSelectOriginalPhoto = _toolBarView.originalPhotoButton.isSelected;
+     _toolBarView.originalPhotoLable.hidden = !_toolBarView.originalPhotoButton.isSelected;
+    
+    if (_isSelectOriginalPhoto) {
+        [self getSelectedPhotoBytes];
+    }
 }
 
 - (void)okButtonClick {
@@ -272,7 +199,7 @@ static CGSize AssetGridThumbnailSize;
     
     __weak typeof(cell) weakCell = cell;
     __weak typeof(self) weakSelf = self;
-    __weak typeof(_numberImageView.layer) weakLayer = _numberImageView.layer;
+    __weak typeof(_toolBarView.numberLable.layer) weakLayer = _toolBarView.numberLable.layer;
     cell.didSelectPhotoBlock = ^(BOOL isSelected) {
         // 1. cancel select / 取消选择
         if (isSelected) {
@@ -342,16 +269,15 @@ static CGSize AssetGridThumbnailSize;
 
 #pragma mark - Private Method
 - (void)refreshBottomToolBarStatus {
-    _previewButton.enabled = self.selectedPhotoArr.count > 0;
-    _okButton.enabled = self.selectedPhotoArr.count > 0;
+    _toolBarView.previewButton.enabled = self.selectedPhotoArr.count > 0;
+    _toolBarView.okButton.enabled = self.selectedPhotoArr.count > 0;
     
-    _numberImageView.hidden = _selectedPhotoArr.count <= 0;
-    _numberLable.hidden = _selectedPhotoArr.count <= 0;
-    _numberLable.text = [NSString stringWithFormat:@"%zd", _selectedPhotoArr.count];
+    _toolBarView.numberLable.hidden = _selectedPhotoArr.count <= 0;
+    _toolBarView.numberLable.text = [NSString stringWithFormat:@"%zd", _selectedPhotoArr.count];
     
-    _originalPhotoButton.enabled = _selectedPhotoArr.count > 0;
-    _originalPhotoButton.selected = (_isSelectOriginalPhoto && _originalPhotoButton.enabled);
-    _originalPhotoLable.hidden = (!_originalPhotoButton.isSelected);
+    _toolBarView.originalPhotoButton.enabled = _selectedPhotoArr.count > 0;
+    _toolBarView.originalPhotoButton.selected = (_isSelectOriginalPhoto && _toolBarView.originalPhotoButton.enabled);
+    _toolBarView.originalPhotoLable.hidden = (!_toolBarView.originalPhotoButton.isSelected);
     if (_isSelectOriginalPhoto) {
         [self getSelectedPhotoBytes];
     }
@@ -379,7 +305,7 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)getSelectedPhotoBytes {
     [[AlbumAllMedia manager] getPhotosBytesWithArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
-        self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 

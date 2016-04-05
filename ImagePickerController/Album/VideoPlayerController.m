@@ -93,7 +93,7 @@
     [self.view addSubview:_toolBar];
 }
 
-#pragma mark - Click Event
+#pragma mark - 点击事件
 - (void)playButtonClick {
     CMTime currentTime = _player.currentItem.currentTime;
     CMTime durationTime = _player.currentItem.duration;

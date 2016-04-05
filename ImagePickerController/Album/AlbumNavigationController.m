@@ -44,12 +44,15 @@
         self.automaticallyAdjustsScrollViewInsets = NO;
     }
     
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UIBarButtonItem *barItem;
     if (iOS9Later) {
         barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[AlbumListController class]]];
     } else {
         barItem = [UIBarButtonItem appearanceWhenContainedIn:[AlbumListController class], nil];
     }
+#pragma clang diagnostic pop    
     NSMutableDictionary *textAttrs = [NSMutableDictionary dictionary];
     textAttrs[NSForegroundColorAttributeName] = [UIColor whiteColor];
     textAttrs[NSFontAttributeName] = [UIFont systemFontOfSize:15];
@@ -113,6 +116,8 @@
     }
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)showAlertWithTitle:(NSString *)title {
     if (iOS8Later) {
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleAlert];
@@ -122,6 +127,7 @@
         [[[UIAlertView alloc] initWithTitle:title message:nil delegate:nil cancelButtonTitle:@"我知道了" otherButtonTitles:nil, nil] show];
     }
 }
+#pragma clang diagnostic pop
 
 - (void)showProgressHUD {
     if (!_progressHUD) {

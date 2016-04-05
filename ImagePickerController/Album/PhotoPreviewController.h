@@ -7,6 +7,28 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AlbumNavigationController.h"
+
+@interface PhotoToolBarView : UIView
+
+@property (nonatomic, assign) BOOL isHavePreviewButton;
+
+@property (nonatomic, strong) UIButton *previewButton;
+
+@property (nonatomic, strong) UIButton *okButton;
+
+@property (nonatomic, strong) UILabel *numberLable;
+
+@property (nonatomic, strong) UIButton *originalPhotoButton;
+
+@property (nonatomic, strong) UILabel *originalPhotoLable;
+
+- (instancetype)initWithNavigation:(AlbumNavigationController *)navigation
+                selectedPhotoArray:(NSArray *)selectedPhotoArray
+                        photoArray:(NSArray *)photoArray
+                        isHaveOriPhotoButton:(BOOL)isHave;
+
+@end
 
 @interface PhotoPreviewController : UIViewController
 

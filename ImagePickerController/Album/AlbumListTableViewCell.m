@@ -29,12 +29,12 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         
-        _albumImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, AlbumListImageWidth, AlbumListImageWidth)];
+        _albumImageView = [[UIImageView alloc] initWithFrame:CGRectMake(5.0, 5.0, AlbumListCellHeight - 10.0, AlbumListCellHeight - 10.0)];
         _albumImageView.contentMode = UIViewContentModeScaleAspectFill;
         _albumImageView.clipsToBounds = YES;
         [self addSubview:_albumImageView];
         
-        _titleLable = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetWidth(_albumImageView.frame) + 10, 0, 150, AlbumListImageWidth)];
+        _titleLable = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetWidth(_albumImageView.frame) + 10, 0, 150, AlbumListCellHeight)];
         [self addSubview:_titleLable];
     }
     return self;
@@ -52,11 +52,15 @@
 }
 
 - (void)layoutSubviews {
-    if (iOS7Later) [super layoutSubviews];
+    if (iOS7Later) {
+        [super layoutSubviews];
+    }
 }
 
 - (void)layoutSublayersOfLayer:(CALayer *)layer {
-    if (iOS7Later) [super layoutSublayersOfLayer:layer];
+    if (iOS7Later) {
+        [super layoutSublayersOfLayer:layer];
+    }
 }
 
 - (void)awakeFromNib {
