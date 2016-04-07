@@ -12,7 +12,7 @@
 
 @interface AlbumNavigationController ()
 
-@property (nonatomic, strong) NSTimer *timer;
+@property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) UILabel *tipLable;
 @property (nonatomic, assign) BOOL pushToPhotoPickerVc;
 
@@ -33,7 +33,6 @@
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
     [UIApplication sharedApplication].statusBarHidden = NO;
     
-    // Default appearance, you can reset these after this method
     // 默认的外观，你可以在这个方法后重置
     self.oKButtonTitleColorNormal = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:1.0];
     self.oKButtonTitleColorDisabled = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:0.5];
@@ -82,7 +81,12 @@
             _tipLable.text = [NSString stringWithFormat:@"请在%@的\"设置-隐私-照片\"选项中，\r允许%@访问你的手机相册。",[UIDevice currentDevice].model, appName];
             [self.view addSubview:_tipLable];
             
-            _timer = [NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(observeAuthrizationStatusChange) userInfo:nil repeats:YES];
+            _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+            dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 0 * NSEC_PER_SEC, 5 * NSEC_PER_SEC);
+            dispatch_source_set_event_handler(_timer, ^{
+                [self observeAuthrizationStatusChange];
+            });
+            dispatch_resume(_timer);
         } else {
             [self pushToPhotoPickerViewController];
         }
@@ -94,8 +98,9 @@
     if ([[AlbumAllMedia manager] authorizationStatusAuthorized]) {
         [self pushToPhotoPickerViewController];
         [_tipLable removeFromSuperview];
-        [_timer invalidate];
-        _timer = nil;
+        if (_timer) {
+            dispatch_source_cancel(_timer);
+        }
     }
 }
 
@@ -172,8 +177,7 @@
         viewController.automaticallyAdjustsScrollViewInsets = NO;
     }
     if (_timer) {
-        [_timer invalidate];
-        _timer = nil;
+        dispatch_source_cancel(_timer);
     }
     
     if (self.childViewControllers.count > 0) {

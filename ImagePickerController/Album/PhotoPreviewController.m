@@ -111,11 +111,6 @@
 @property (nonatomic, strong) UIButton *selectButton;
 
 @property (nonatomic, strong) PhotoToolBarView *toolBarView;
-//@property (nonatomic, strong) UIButton *okButton;
-//@property (nonatomic, strong) UIImageView *numberImageView;
-//@property (nonatomic, strong) UILabel *numberLable;
-//@property (nonatomic, strong) UIButton *originalPhotoButton;
-//@property (nonatomic, strong) UILabel *originalPhotoLable;
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 
@@ -283,7 +278,22 @@
     __weak PhotoPreviewController *weakSelf = self;
     cell.singleTapGestureBlock = ^() {
         weakSelf.isHideNaviBar = !weakSelf.isHideNaviBar;
-        weakSelf.toolBarView.hidden = weakSelf.isHideNaviBar;
+        
+        if (weakSelf.isHideNaviBar) {
+            [UIView animateWithDuration:0.3 animations:^{
+                CGRect windowRect = [UIScreen mainScreen].bounds;
+                weakSelf.toolBarView.frame = CGRectMake(0, CGRectGetHeight(windowRect), CGRectGetWidth(windowRect), 50);
+            } completion:^(BOOL finished) {
+                weakSelf.toolBarView.hidden = weakSelf.isHideNaviBar;
+            }];
+        } else {
+            weakSelf.toolBarView.hidden = weakSelf.isHideNaviBar;
+            [UIView animateWithDuration:0.3 animations:^{
+                CGRect windowRect = [UIScreen mainScreen].bounds;
+                weakSelf.toolBarView.frame = CGRectMake(0, CGRectGetHeight(windowRect) - 50, CGRectGetWidth(windowRect), 50);
+            }];
+        }
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         if (iOS9Later) {
@@ -312,7 +322,6 @@
     
     _toolBarView.okButton.enabled = _selectedPhotoArray.count > 0;
 
-    // If is previewing video, hide original photo button
     // 如果正在预览的是视频，隐藏原图按钮
     if (_isHideNaviBar) {
         return;

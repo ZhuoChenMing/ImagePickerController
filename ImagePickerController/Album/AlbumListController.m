@@ -43,7 +43,9 @@
         _albumArray = [NSMutableArray arrayWithArray:models];
         
         CGFloat top = 44;
-        if (iOS7Later) top += 20;
+        if (iOS7Later) {
+            top += 20;
+        }
         _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, top, CGRectGetWidth(self.view.frame), CGRectGetHeight(self.view.frame) - top) style:UITableViewStylePlain];
         _tableView.rowHeight = 70;
         _tableView.tableFooterView = [[UIView alloc] init];
