@@ -145,7 +145,7 @@
     UIBarButtonItem *leftBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"navi_back"] style:UIBarButtonItemStyleDone target:self action:@selector(back)];
     [leftBarButton setImageInsets:UIEdgeInsetsMake(0, -8, 0, 0)];
     self.navigationItem.leftBarButtonItem = leftBarButton;
-    
+
     _selectButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 42, 42)];
     [_selectButton setImage:[UIImage imageNamed:@"photo_def_photoPickerVc"] forState:UIControlStateNormal];
     [_selectButton setImage:[UIImage imageNamed:@"photo_sel_photoPickerVc"] forState:UIControlStateSelected];
@@ -217,7 +217,7 @@
 - (void)showOscillatoryAnimationWithLayer:(CALayer *)layer type:(BOOL)type {
     NSNumber *animationScale1 = type == 0 ? @(1.15) : @(0.5);
     NSNumber *animationScale2 = type == 0 ? @(0.92) : @(1.15);
-    
+
     [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseInOut animations:^{
         [layer setValue:animationScale1 forKeyPath:@"transform.scale"];
     } completion:^(BOOL finished) {

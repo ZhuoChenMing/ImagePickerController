@@ -100,7 +100,9 @@
         PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:smartAlbumSubtype options:nil];
         for (PHAssetCollection *collection in smartAlbums) {
             PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
-            if (fetchResult.count < 1) continue;
+            if (fetchResult.count < 1) {
+                continue;
+            }
             if ([collection.localizedTitle containsString:@"Deleted"] || [collection.localizedTitle isEqualToString:@"最近删除"]) continue;
             if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"]) {
                 [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:0];
@@ -112,7 +114,9 @@
         PHFetchResult *albums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAlbumRegular | PHAssetCollectionSubtypeAlbumSyncedAlbum options:nil];
         for (PHAssetCollection *collection in albums) {
             PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
-            if (fetchResult.count < 1) continue;
+            if (fetchResult.count < 1) {
+                continue;
+            }
             if ([collection.localizedTitle isEqualToString:@"My Photo Stream"] || [collection.localizedTitle isEqualToString:@"我的照片流"]) {
                 [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:1];
             } else {
@@ -125,7 +129,9 @@
             if (group == nil) {
                 if (completion && albumArr.count > 0) completion(albumArr);
             }
-            if ([group numberOfAssets] < 1) return;
+            if ([group numberOfAssets] < 1) {
+                return;
+            }
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
             if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
                 [albumArr insertObject:[self modelWithResult:group name:name] atIndex:0];
@@ -146,15 +152,17 @@
         [fetchResult enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
             PHAsset *asset = (PHAsset *)obj;
             AlbumModelMediaType type = AlbumModelMediaTypePhoto;
-            if (asset.mediaType == PHAssetMediaTypeVideo)      type = AlbumModelMediaTypeVideo;
-            else if (asset.mediaType == PHAssetMediaTypeAudio) type = AlbumModelMediaTypeAudio;
-            else if (asset.mediaType == PHAssetMediaTypeImage) {
+            if (asset.mediaType == PHAssetMediaTypeVideo) {
+                type = AlbumModelMediaTypeVideo;
+            } else if (asset.mediaType == PHAssetMediaTypeAudio) {
+                type = AlbumModelMediaTypeAudio;
+            } else if (asset.mediaType == PHAssetMediaTypeImage) {
                 if (iOS9_1Later) {
                     // if (asset.mediaSubtypes == PHAssetMediaSubtypePhotoLive) type = AlbumModelMediaTypeLivePhoto;
                 }
             }
             if (!allowPickingVideo && type == AlbumModelMediaTypeVideo) return;
-            NSString *timeLength = type == AlbumModelMediaTypeVideo ? [NSString stringWithFormat:@"%0.0f",asset.duration] : @"";
+            NSString *timeLength = type == AlbumModelMediaTypeVideo ? [NSString stringWithFormat:@"%0.0f", asset.duration] : @"";
             timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
             [photoArr addObject:[PhotoPickerModel modelWithAsset:asset type:type timeLength:timeLength]];
         }];
@@ -166,7 +174,9 @@
         if (!allowPickingVideo) [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
         [gruop enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
             if (result == nil) {
-                if (completion) completion(photoArr);
+                if (completion) {
+                    completion(photoArr);
+                }
             }
             AlbumModelMediaType type = AlbumModelMediaTypePhoto;
             if (!allowPickingVideo){
@@ -194,20 +204,26 @@
         PHAsset *asset = fetchResult[index];
         
         AlbumModelMediaType type = AlbumModelMediaTypePhoto;
-        if (asset.mediaType == PHAssetMediaTypeVideo)      type = AlbumModelMediaTypeVideo;
-        else if (asset.mediaType == PHAssetMediaTypeAudio) type = AlbumModelMediaTypeAudio;
-        else if (asset.mediaType == PHAssetMediaTypeImage) {
+        if (asset.mediaType == PHAssetMediaTypeVideo) {
+            type = AlbumModelMediaTypeVideo;
+        } else if (asset.mediaType == PHAssetMediaTypeAudio) {
+            type = AlbumModelMediaTypeAudio;
+        } else if (asset.mediaType == PHAssetMediaTypeImage) {
             if (iOS9_1Later) {
                 // if (asset.mediaSubtypes == PHAssetMediaSubtypePhotoLive) type = AlbumModelMediaTypeLivePhoto;
             }
         }
-        NSString *timeLength = type == AlbumModelMediaTypeVideo ? [NSString stringWithFormat:@"%0.0f",asset.duration] : @"";
+        NSString *timeLength = type == AlbumModelMediaTypeVideo ? [NSString stringWithFormat:@"%0.0f", asset.duration] : @"";
         timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
         PhotoPickerModel *model = [PhotoPickerModel modelWithAsset:asset type:type timeLength:timeLength];
-        if (completion) completion(model);
+        if (completion) {
+           completion(model);
+        }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
-        if (!allowPickingVideo) [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
+        if (!allowPickingVideo) {
+            [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
+        }
         NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:index];
         [gruop enumerateAssetsAtIndexes:indexSet options:NSEnumerationConcurrent usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
             PhotoPickerModel *model;
@@ -227,7 +243,9 @@
             } else {
                 model = [PhotoPickerModel modelWithAsset:result type:type];
             }
-            if (completion) completion(model);
+            if (completion) {
+                completion(model);
+            }
         }];
     }
 }
@@ -242,9 +260,9 @@
         NSInteger min = duration / 60;
         NSInteger sec = duration - (min * 60);
         if (sec < 10) {
-            newTime = [NSString stringWithFormat:@"%zd:0%zd",min,sec];
+            newTime = [NSString stringWithFormat:@"%zd:0%zd", min, sec];
         } else {
-            newTime = [NSString stringWithFormat:@"%zd:%zd",min,sec];
+            newTime = [NSString stringWithFormat:@"%zd:%zd", min, sec];
         }
     }
     return newTime;
@@ -257,10 +275,14 @@
         PhotoPickerModel *model = photos[i];
         if ([model.asset isKindOfClass:[PHAsset class]]) {
             [[PHImageManager defaultManager] requestImageDataForAsset:model.asset options:nil resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
-                if (model.type != AlbumModelMediaTypeVideo) dataLength += imageData.length;
+                if (model.type != AlbumModelMediaTypeVideo) {
+                    dataLength += imageData.length;
+                }
                 if (i >= photos.count - 1) {
                     NSString *bytes = [self getBytesFromDataLength:dataLength];
-                    if (completion) completion(bytes);
+                    if (completion) {
+                        completion(bytes);
+                    }
                 }
             }];
         } else if ([model.asset isKindOfClass:[ALAsset class]]) {
@@ -268,7 +290,9 @@
             if (model.type != AlbumModelMediaTypeVideo) dataLength += (NSInteger)representation.size;
             if (i >= photos.count - 1) {
                 NSString *bytes = [self getBytesFromDataLength:dataLength];
-                if (completion) completion(bytes);
+                if (completion) {
+                  completion(bytes);
+                }
             }
         }
     }
@@ -277,11 +301,11 @@
 - (NSString *)getBytesFromDataLength:(NSInteger)dataLength {
     NSString *bytes;
     if (dataLength >= 0.1 * (1024 * 1024)) {
-        bytes = [NSString stringWithFormat:@"%0.1fM",dataLength/1024/1024.0];
+        bytes = [NSString stringWithFormat:@"%0.1fM", dataLength / 1024 / 1024.0];
     } else if (dataLength >= 1024) {
-        bytes = [NSString stringWithFormat:@"%0.0fK",dataLength/1024.0];
+        bytes = [NSString stringWithFormat:@"%0.0fK", dataLength / 1024.0];
     } else {
-        bytes = [NSString stringWithFormat:@"%zdB",dataLength];
+        bytes = [NSString stringWithFormat:@"%zdB", dataLength];
     }
     return bytes;
 }
@@ -305,7 +329,9 @@
         [[PHImageManager defaultManager] requestImageForAsset:asset targetSize:CGSizeMake(pixelWidth, pixelHeight) contentMode:PHImageContentModeAspectFit options:nil resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
             BOOL downloadFinined = (![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey]);
             if (downloadFinined && result) {
-                if (completion) completion(result,info,[[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+                if (completion) {
+                    completion(result, info, [[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+                }
             }
             // Download image from iCloud / 从iCloud下载图片
             if ([info objectForKey:PHImageResultIsInCloudKey] && !result) {
@@ -315,7 +341,9 @@
                     UIImage *resultImage = [UIImage imageWithData:imageData scale:0.1];
                     resultImage = [self scaleImage:resultImage toSize:CGSizeMake(pixelWidth, pixelHeight)];
                     if (resultImage) {
-                        if (completion) completion(resultImage,info,[[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+                        if (completion) {
+                            completion(resultImage, info, [[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
+                        }
                     }
                 }];
             }
@@ -325,7 +353,7 @@
         ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
         CGImageRef thumbnailImageRef = alAsset.aspectRatioThumbnail;
         UIImage *thumbnailImage = [UIImage imageWithCGImage:thumbnailImageRef scale:1.0 orientation:UIImageOrientationUp];
-        if (completion) completion(thumbnailImage,nil,YES);
+        if (completion) completion(thumbnailImage, nil, YES);
         
         if (photoWidth == [UIScreen mainScreen].bounds.size.width) {
             dispatch_async(dispatch_get_global_queue(0,0), ^{
@@ -345,24 +373,30 @@
 - (void)getPostImageWithAlbumModel:(AlbumListModel *)model completion:(void (^)(UIImage *))completion {
     if (iOS8Later) {
         [[AlbumAllMedia manager] getPhotoWithAsset:[model.result lastObject] photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-            if (completion) completion(photo);
+            if (completion) {
+                completion(photo);
+            }
         }];
     } else {
         ALAssetsGroup *gruop = model.result;
         UIImage *postImage = [UIImage imageWithCGImage:gruop.posterImage];
-        if (completion) completion(postImage);
+        if (completion) {
+           completion(postImage);
+        }
     }
 }
 
 /// Get Original Photo / 获取原图
-- (void)getOriginalPhotoWithAsset:(id)asset completion:(void (^)(UIImage *photo,NSDictionary *info))completion {
+- (void)getOriginalPhotoWithAsset:(id)asset completion:(void (^)(UIImage *photo, NSDictionary *info))completion {
     if ([asset isKindOfClass:[PHAsset class]]) {
-        PHImageRequestOptions *option = [[PHImageRequestOptions alloc]init];
+        PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];
         option.networkAccessAllowed = YES;
         [[PHImageManager defaultManager] requestImageForAsset:asset targetSize:PHImageManagerMaximumSize contentMode:PHImageContentModeAspectFit options:option resultHandler:^(UIImage * _Nullable result, NSDictionary * _Nullable info) {
             BOOL downloadFinined = (![[info objectForKey:PHImageCancelledKey] boolValue] && ![info objectForKey:PHImageErrorKey]);
             if (downloadFinined && result) {
-                if (completion) completion(result,info);
+                if (completion) {
+                    completion(result,info);
+                }
             }
         }];
     } else if ([asset isKindOfClass:[ALAsset class]]) {
