@@ -10,7 +10,7 @@
 #import "PhotoPreviewCell.h"
 #import "PhotoPickerModel.h"
 #import "AlbumListController.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 
 @implementation PhotoToolBarView
 
@@ -74,7 +74,7 @@
             _originalPhotoLable.font = [UIFont systemFontOfSize:16];
             _originalPhotoLable.textColor = navigation.oKButtonTitleColorNormal;
             if (isHave) {
-                [[AlbumAllMedia manager] getPhotosBytesWithArray:photoArray completion:^(NSString *totalBytes) {
+                [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:photoArray completion:^(NSString *totalBytes) {
                     self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
                 }];
             }
@@ -137,6 +137,7 @@
     if (_currentIndex) {
         [self.collectionView setContentOffset:CGPointMake(CGRectGetWidth(self.view.frame) * _currentIndex, 0) animated:NO];
     }
+    
     [self refreshNaviBarAndBottomBarState];
 }
 
@@ -338,7 +339,7 @@
 }
 
 - (void)showPhotoBytes {
-    [[AlbumAllMedia manager] getPhotosBytesWithArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
+    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
         _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }

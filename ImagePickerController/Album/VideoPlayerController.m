@@ -9,7 +9,7 @@
 #import "VideoPlayerController.h"
 #import <MediaPlayer/MediaPlayer.h>
 
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 #import "PhotoPickerModel.h"
 #import "AlbumListController.h"
 #import "PhotoPreviewController.h"
@@ -36,10 +36,10 @@
 
 - (void)configMoviePlayer {
     
-    [[AlbumAllMedia manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+    [[AlbumDataHandle manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         _cover = photo;
     }];
-    [[AlbumAllMedia manager] getVideoWithAsset:_model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
+    [[AlbumDataHandle manager] getVideoWithAsset:_model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             _player = [AVPlayer playerWithPlayerItem:playerItem];
             AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];

@@ -9,7 +9,7 @@
 #import "AlbumListController.h"
 #import "AlbumListTableViewCell.h"
 #import "PhotoPickerController.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 
 @interface AlbumListController ()<UITableViewDataSource, UITableViewDelegate>
 
@@ -39,7 +39,7 @@
 
 - (void)configTableView {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    [[AlbumAllMedia manager] getAllAlbums:navigation.allowPickingVideo completion:^(NSArray<AlbumListModel *> *models) {
+    [[AlbumDataHandle manager] getAllAlbums:navigation.allowPickingVideo completion:^(NSArray<AlbumDataModel *> *models) {
         _albumArray = [NSMutableArray arrayWithArray:models];
         
         CGFloat top = 44;

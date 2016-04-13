@@ -1,35 +1,35 @@
 //
-//  AlbumAllMedia.m
+//  AlbumDataHandle.m
 //  ImagePickerController
 //
 //  Created by 酌晨茗 on 16/1/4.
 //  Copyright © 2016年 酌晨茗. All rights reserved.
 //
 
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 //AssetsLibrary框架用于访问所有相片
 #import <AssetsLibrary/AssetsLibrary.h>
 #import "PhotoPickerModel.h"
-#import "AlbumListModel.h"
+#import "AlbumDataModel.h"
 #import "AlbumListController.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-@interface AlbumAllMedia ()
+@interface AlbumDataHandle ()
 
 @property (nonatomic, strong) ALAssetsLibrary *assetLibrary;
 
 @end
 
-@implementation AlbumAllMedia
+@implementation AlbumDataHandle
 
 + (instancetype)manager {
-    static AlbumAllMedia *manager;
+    static AlbumDataHandle *manager;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [[self alloc] init];
-        manager.cachingImageManager = [[PHCachingImageManager alloc] init];
+//        manager.cachingImageManager = [[PHCachingImageManager alloc] init];
     });
     return manager;
 }
@@ -56,8 +56,8 @@
 }
 
 #pragma mark - 获得相册/相册数组
-- (void)getCameraRollAlbum:(BOOL)allowPickingVideo completion:(void (^)(AlbumListModel *))completion{
-    __block AlbumListModel *model;
+- (void)getCameraRollAlbum:(BOOL)allowPickingVideo completion:(void (^)(AlbumDataModel *))completion{
+    __block AlbumDataModel *model;
     if (iOS8Later) {
         PHFetchOptions *option = [[PHFetchOptions alloc] init];
         if (!allowPickingVideo) option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
@@ -85,7 +85,7 @@
     }
 }
 
-- (void)getAllAlbums:(BOOL)allowPickingVideo completion:(void (^)(NSArray<AlbumListModel *> *))completion {
+- (void)getAllAlbums:(BOOL)allowPickingVideo completion:(void (^)(NSArray<AlbumDataModel *> *))completion {
     NSMutableArray *albumArr = [NSMutableArray array];
     if (iOS8Later) {
         PHFetchOptions *option = [[PHFetchOptions alloc] init];
@@ -298,6 +298,36 @@
     }
 }
 
+- (void)getPhotoBytesWithPhotoArray:(NSArray *)photoArray completion:(void (^)(NSString *totalBytes))completion {
+    __block NSInteger dataLength = 0;
+    [photoArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        PhotoPickerModel *model = photoArray[idx];
+        if ([model.asset isKindOfClass:[PHAsset class]]) {
+            [[PHImageManager defaultManager] requestImageDataForAsset:model.asset options:nil resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+                if (model.type != AlbumModelMediaTypeVideo) {
+                    dataLength += imageData.length;
+                }
+                if (idx >= photoArray.count - 1) {
+                    NSString *bytes = [self getBytesFromDataLength:dataLength];
+                    if (completion) {
+                        completion(bytes);
+                    }
+                }
+            }];
+        } else if ([model.asset isKindOfClass:[ALAsset class]]) {
+            ALAssetRepresentation *representation = [model.asset defaultRepresentation];
+            if (model.type != AlbumModelMediaTypeVideo) dataLength += (NSInteger)representation.size;
+            if (idx >= photoArray.count - 1) {
+                NSString *bytes = [self getBytesFromDataLength:dataLength];
+                if (completion) {
+                    completion(bytes);
+                }
+            }
+        }
+
+    }];
+}
+
 - (NSString *)getBytesFromDataLength:(NSInteger)dataLength {
     NSString *bytes;
     if (dataLength >= 0.1 * (1024 * 1024)) {
@@ -370,9 +400,9 @@
     }
 }
 
-- (void)getPostImageWithAlbumModel:(AlbumListModel *)model completion:(void (^)(UIImage *))completion {
+- (void)getPostImageWithAlbumModel:(AlbumDataModel *)model completion:(void (^)(UIImage *))completion {
     if (iOS8Later) {
-        [[AlbumAllMedia manager] getPhotoWithAsset:[model.result lastObject] photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+        [[AlbumDataHandle manager] getPhotoWithAsset:[model.result lastObject] photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if (completion) {
                 completion(photo);
             }
@@ -437,8 +467,8 @@
 }
 
 #pragma mark - Private Method
-- (AlbumListModel *)modelWithResult:(id)result name:(NSString *)name {
-    AlbumListModel *model = [[AlbumListModel alloc] init];
+- (AlbumDataModel *)modelWithResult:(id)result name:(NSString *)name {
+    AlbumDataModel *model = [[AlbumDataModel alloc] init];
     model.result = result;
     model.name = [self getNewAlbumName:name];
     if ([result isKindOfClass:[PHFetchResult class]]) {

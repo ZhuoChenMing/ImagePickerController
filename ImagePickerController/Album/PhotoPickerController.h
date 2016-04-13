@@ -8,10 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
-@class AlbumListModel;
+@class AlbumDataModel;
 
 @interface PhotoPickerController : UIViewController
 
-@property (nonatomic, strong) AlbumListModel *model;
+@property (nonatomic, strong) AlbumDataModel *model;
 
 @end

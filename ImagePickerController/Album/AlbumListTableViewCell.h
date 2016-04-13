@@ -10,10 +10,10 @@
 
 static const CGFloat AlbumListCellHeight = 70.0;
 
-@class AlbumListModel;
+@class AlbumDataModel;
 
 @interface AlbumListTableViewCell : UITableViewCell
 
-@property (nonatomic, strong) AlbumListModel *model;
+@property (nonatomic, strong) AlbumDataModel *model;
 
 @end

@@ -7,8 +7,8 @@
 //
 
 #import "AlbumListTableViewCell.h"
-#import "AlbumListModel.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataModel.h"
+#import "AlbumDataHandle.h"
 
 #define iOS7Later ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f)
 #define iOS8Later ([UIDevice currentDevice].systemVersion.floatValue >= 8.0f)
@@ -40,13 +40,13 @@
     return self;
 }
 
-- (void)setModel:(AlbumListModel *)model {
+- (void)setModel:(AlbumDataModel *)model {
     _model = model;
     NSMutableAttributedString *nameString = [[NSMutableAttributedString alloc] initWithString:model.name attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:16],NSForegroundColorAttributeName:[UIColor blackColor]}];
     NSAttributedString *countString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"  (%zd)", model.count] attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:16], NSForegroundColorAttributeName:[UIColor lightGrayColor]}];
     [nameString appendAttributedString:countString];
     self.titleLable.attributedText = nameString;
-    [[AlbumAllMedia manager] getPostImageWithAlbumModel:model completion:^(UIImage *postImage) {
+    [[AlbumDataHandle manager] getPostImageWithAlbumModel:model completion:^(UIImage *postImage) {
         self.albumImageView.image = postImage;
     }];
 }

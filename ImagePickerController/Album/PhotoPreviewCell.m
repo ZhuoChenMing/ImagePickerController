@@ -8,7 +8,7 @@
 
 #import "PhotoPreviewCell.h"
 #import "PhotoPickerModel.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 
 @interface PhotoPreviewCell ()<UIScrollViewDelegate>
 
@@ -68,7 +68,7 @@
     _model = model;
     [self.scrollView setZoomScale:1.0 animated:NO];
     
-    [[AlbumAllMedia manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+    [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         self.imageView.image = photo;
         [self autouLayoutImageView];
     }];

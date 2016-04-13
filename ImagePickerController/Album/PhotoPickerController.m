@@ -11,10 +11,10 @@
 #import "PhotoPickerModel.h"
 
 #import "AlbumListController.h"
-#import "AlbumListModel.h"
+#import "AlbumDataModel.h"
 
 #import "PhotoPreviewController.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 #import "VideoPlayerController.h"
 
 @interface PhotoPickerController ()<UICollectionViewDataSource, UICollectionViewDelegate>
@@ -54,7 +54,7 @@ static CGSize AssetGridThumbnailSize;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    [[AlbumAllMedia manager] getAssetsFromFetchResult:_model.result allowPickingVideo:navigation.allowPickingVideo completion:^(NSArray<PhotoPickerModel *> *models) {
+    [[AlbumDataHandle manager] getAssetsFromFetchResult:_model.result allowPickingVideo:navigation.allowPickingVideo completion:^(NSArray<PhotoPickerModel *> *models) {
         _photoArr = [NSMutableArray arrayWithArray:models];
         [self configCollectionView];
         [self configBottomToolBar];
@@ -159,7 +159,7 @@ static CGSize AssetGridThumbnailSize;
     
     for (NSInteger i = 0; i < _selectedPhotoArr.count; i++) {
         PhotoPickerModel *model = _selectedPhotoArr[i];
-        [[AlbumAllMedia manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+        [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if (isDegraded) return;
             if (photo) [photos replaceObjectAtIndex:i withObject:photo];
             if (info) [infoArr replaceObjectAtIndex:i withObject:info];
@@ -304,14 +304,14 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)getSelectedPhotoBytes {
-    [[AlbumAllMedia manager] getPhotosBytesWithArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
+    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
         _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 
 #pragma mark - Asset Caching
 - (void)resetCachedAssets {
-    [[AlbumAllMedia manager].cachingImageManager stopCachingImagesForAllAssets];
+    [[AlbumDataHandle manager].cachingImageManager stopCachingImagesForAllAssets];
     self.previousPreheatRect = CGRectZero;
 }
 
@@ -348,8 +348,8 @@ static CGSize AssetGridThumbnailSize;
         NSArray *assetsToStopCaching = [self assetsAtIndexPaths:removedIndexPaths];
         
         // Update the assets the PHCachingImageManager is caching.
-        [[AlbumAllMedia manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
-        [[AlbumAllMedia manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[AlbumDataHandle manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[AlbumDataHandle manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
         
         // Store the preheat rect to compare against in the future.
         self.previousPreheatRect = preheatRect;

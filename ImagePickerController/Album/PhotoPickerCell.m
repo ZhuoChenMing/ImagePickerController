@@ -8,7 +8,7 @@
 
 #import "PhotoPickerCell.h"
 #import "PhotoPickerModel.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 
 @interface PhotoPickerCell ()
 
@@ -30,7 +30,7 @@
 
 - (void)setModel:(PhotoPickerModel *)model {
     _model = model;
-    [[AlbumAllMedia manager] getPhotoWithAsset:model.asset photoWidth:CGRectGetWidth(self.frame) completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+    [[AlbumDataHandle manager] getPhotoWithAsset:model.asset photoWidth:CGRectGetWidth(self.frame) completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         self.imageView.image = photo;
     }];
     self.selectPhotoButton.selected = model.isSelected;

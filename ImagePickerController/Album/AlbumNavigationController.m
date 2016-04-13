@@ -8,7 +8,7 @@
 
 #import "AlbumNavigationController.h"
 #import "AlbumListController.h"
-#import "AlbumAllMedia.h"
+#import "AlbumDataHandle.h"
 
 @interface AlbumNavigationController ()
 
@@ -69,7 +69,7 @@
         _allowPickingOriginalPhoto = YES;
         _allowPickingVideo = YES;
         
-        if (![[AlbumAllMedia manager] authorizationStatusAuthorized]) {
+        if (![[AlbumDataHandle manager] authorizationStatusAuthorized]) {
             _tipLable = [[UILabel alloc] init];
             _tipLable.frame = CGRectMake(8, 0, CGRectGetWidth(self.view.frame) - 16, 300);
             _tipLable.textAlignment = NSTextAlignmentCenter;
@@ -95,7 +95,7 @@
 }
 
 - (void)observeAuthrizationStatusChange {
-    if ([[AlbumAllMedia manager] authorizationStatusAuthorized]) {
+    if ([[AlbumDataHandle manager] authorizationStatusAuthorized]) {
         [self pushToPhotoPickerViewController];
         [_tipLable removeFromSuperview];
         if (_timer) {
@@ -108,7 +108,7 @@
     _pushToPhotoPickerVc = YES;
     if (_pushToPhotoPickerVc) {
         //        PhotoPickerController *photoPickerVc = [[PhotoPickerController alloc] init];
-        //        [[AlbumAllMedia manager] getCameraRollAlbum:self.allowPickingVideo completion:^(AlbumListModel *model) {
+        //        [[AlbumDataHandle manager] getCameraRollAlbum:self.allowPickingVideo completion:^(AlbumDataModel *model) {
         //            photoPickerVc.model = model;
         //            [self pushViewController:photoPickerVc animated:YES];
         //            _pushToPhotoPickerVc = NO;
