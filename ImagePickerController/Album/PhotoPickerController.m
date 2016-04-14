@@ -148,18 +148,19 @@ static CGSize AssetGridThumbnailSize;
 - (void)okButtonClick {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
     [navigation showProgressHUD];
+    
+    NSMutableArray *photos = [NSMutableArray array];
+    NSMutableArray *assets = [NSMutableArray array];
+    NSMutableArray *infoArr = [NSMutableArray array];
+    
     for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
         PhotoPickerModel *model = self.pickerModelArray[i];
-        
-        NSMutableArray *photos = [NSMutableArray array];
-        NSMutableArray *assets = [NSMutableArray array];
-        NSMutableArray *infoArr = [NSMutableArray array];
         
         [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if (isDegraded) {
                 return;
             }
-     
+            
             if (photo) {
                 if (_isSelectOriginalPhoto) {
                     [photos addObject:photo];
@@ -175,20 +176,22 @@ static CGSize AssetGridThumbnailSize;
             if (info) {
                 [infoArr addObject:info];
             }
-   
-            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
-                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
+            
+            if (i == self.pickerModelArray.count - 1) {
+                if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
+                    [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
+                }
+                if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
+                    [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
+                }
+                if (navigation.didFinishPickingPhotosHandle) {
+                    navigation.didFinishPickingPhotosHandle(photos, assets);
+                }
+                if (navigation.didFinishPickingPhotosWithInfosHandle) {
+                    navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
+                }
+                [navigation hideProgressHUD];
             }
-            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
-                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
-            }
-            if (navigation.didFinishPickingPhotosHandle) {
-                navigation.didFinishPickingPhotosHandle(photos, assets);
-            }
-            if (navigation.didFinishPickingPhotosWithInfosHandle) {
-                navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
-            }
-            [navigation hideProgressHUD];
         }];
     }
     

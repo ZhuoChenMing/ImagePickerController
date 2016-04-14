@@ -232,7 +232,9 @@
             AlbumModelMediaType type = AlbumModelMediaTypePhoto;
             if (!allowPickingVideo){
                 model = [PhotoPickerModel modelWithAsset:result type:type];
-                if (completion) completion(model);
+                if (completion) {
+                    completion(model);
+                }
                 return;
             }
             /// Allow picking video
