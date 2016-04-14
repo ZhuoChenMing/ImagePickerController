@@ -47,8 +47,7 @@
 
 @property (nonatomic, copy) void (^albumNavigationControllerDidCancelHandle)();
 
-// 如果用户选择了一个视频，下面的handle会被执行
-// 如果系统版本大于iOS8，asset是PHAsset类的对象，否则是ALAsset类的对象
+// 如果用户选择了一个视频，下面的handle会被执行，如果系统版本大于iOS8，asset是PHAsset类的对象，否则是ALAsset类的对象
 @property (nonatomic, copy) void (^didFinishPickingVideoHandle)(UIImage *coverImage, id asset);
 
 @property (nonatomic, weak) id<AlbumNavigationControllerDelegate> pickerDelegate;
@@ -59,16 +58,14 @@
 
 @optional
 
-// 这个照片选择器不会自己dismiss，用户dismiss这个选择器的时候，会走下面的回调
-// 如果用户没有选择发送原图,Assets将是空数组
+// 这个照片选择器不会自己dismiss，用户dismiss这个选择器的时候，会走下面的回调，如果用户没有选择发送原图，Assets将是空数组
 - (void)albumNavigationController:(AlbumNavigationController *)navigation didFinishPickingPhotos:(NSArray<UIImage *> *)photos sourceAssets:(NSArray *)assets;
 
 - (void)albumNavigationController:(AlbumNavigationController *)navigation didFinishPickingPhotos:(NSArray<UIImage *> *)photos sourceAssets:(NSArray *)assets infos:(NSArray<NSDictionary *> *)infos;
 
 - (void)albumNavigationControllerDidCancel:(AlbumNavigationController *)navigation;
 
-// 如果用户选择了一个视频，下面的handle会被执行
-// 如果系统版本大于iOS8，asset是PHAsset类的对象，否则是ALAsset类的对象
+// 如果用户选择了一个视频，下面的handle会被执行，如果系统版本大于iOS8，asset是PHAsset类的对象，否则是ALAsset类的对象
 - (void)albumNavigationController:(AlbumNavigationController *)navigation didFinishPickingVideo:(UIImage *)coverImage sourceAssets:(id)asset;
 
 @end

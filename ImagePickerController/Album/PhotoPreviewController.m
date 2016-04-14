@@ -17,7 +17,7 @@
 - (instancetype)initWithNavigation:(AlbumNavigationController *)navigation
                 selectedPhotoArray:(NSArray *)selectedPhotoArray
                         photoArray:(NSArray *)photoArray
-              isHaveOriPhotoButton:(BOOL)isHave {
+          isHavePreviewPhotoButton:(BOOL)isHave {
     self = [super init];
     if (self) {
         CGRect windowRect = [UIScreen mainScreen].bounds;
@@ -179,7 +179,7 @@
 
 - (void)configBottomToolBar {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:_selectedPhotoArray photoArray:_photoArray isHaveOriPhotoButton:NO];
+    self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:_selectedPhotoArray photoArray:_photoArray isHavePreviewPhotoButton:NO];
     
     [self.toolBarView.originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
     [self.toolBarView.okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];

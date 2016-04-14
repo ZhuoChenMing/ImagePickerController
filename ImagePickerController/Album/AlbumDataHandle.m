@@ -78,7 +78,9 @@
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
             if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
                 model = [self modelWithResult:group name:name];
-                if (completion) completion(model);
+                if (completion) {
+                    completion(model);
+                }
                 *stop = YES;
             }
         } failureBlock:nil];
@@ -316,7 +318,9 @@
             }];
         } else if ([model.asset isKindOfClass:[ALAsset class]]) {
             ALAssetRepresentation *representation = [model.asset defaultRepresentation];
-            if (model.type != AlbumModelMediaTypeVideo) dataLength += (NSInteger)representation.size;
+            if (model.type != AlbumModelMediaTypeVideo) {
+                dataLength += (NSInteger)representation.size;
+            }
             if (idx >= photoArray.count - 1) {
                 NSString *bytes = [self getBytesFromDataLength:dataLength];
                 if (completion) {
@@ -346,8 +350,8 @@
 }
 
 - (void)getPhotoWithAsset:(id)asset photoWidth:(CGFloat)photoWidth completion:(void (^)(UIImage *, NSDictionary *, BOOL isDegraded))completion {
-    if (photoWidth > 600) {
-        photoWidth = 600.0;
+    if (photoWidth > [UIScreen mainScreen].bounds.size.width) {
+        photoWidth = [UIScreen mainScreen].bounds.size.width;
     }
     if ([asset isKindOfClass:[PHAsset class]]) {
         PHAsset *phAsset = (PHAsset *)asset;
@@ -370,6 +374,7 @@
                 [[PHImageManager defaultManager] requestImageDataForAsset:asset options:option resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
                     UIImage *resultImage = [UIImage imageWithData:imageData scale:0.1];
                     resultImage = [self scaleImage:resultImage toSize:CGSizeMake(pixelWidth, pixelHeight)];
+                    
                     if (resultImage) {
                         if (completion) {
                             completion(resultImage, info, [[info objectForKey:PHImageResultIsDegradedKey] boolValue]);
@@ -383,10 +388,12 @@
         ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
         CGImageRef thumbnailImageRef = alAsset.aspectRatioThumbnail;
         UIImage *thumbnailImage = [UIImage imageWithCGImage:thumbnailImageRef scale:1.0 orientation:UIImageOrientationUp];
-        if (completion) completion(thumbnailImage, nil, YES);
+        if (completion) {
+            completion(thumbnailImage, nil, YES);
+        }
         
         if (photoWidth == [UIScreen mainScreen].bounds.size.width) {
-            dispatch_async(dispatch_get_global_queue(0,0), ^{
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
                 CGImageRef fullScrennImageRef = [assetRep fullScreenImage];
                 UIImage *fullScrennImage = [UIImage imageWithCGImage:fullScrennImageRef scale:1.0 orientation:UIImageOrientationUp];
                 
@@ -416,7 +423,7 @@
     }
 }
 
-/// Get Original Photo / 获取原图
+//获取原图
 - (void)getOriginalPhotoWithAsset:(id)asset completion:(void (^)(UIImage *photo, NSDictionary *info))completion {
     if ([asset isKindOfClass:[PHAsset class]]) {
         PHImageRequestOptions *option = [[PHImageRequestOptions alloc] init];

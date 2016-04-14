@@ -69,6 +69,18 @@
     if (indexPath.row == _selectedPhotos.count) [self pickPhotoButtonClick:nil];
 }
 
+- (NSString *)getBytesFromDataLength:(NSInteger)dataLength {
+    NSString *bytes;
+    if (dataLength >= 0.1 * (1024 * 1024)) {
+        bytes = [NSString stringWithFormat:@"%0.1fM", dataLength / 1024 / 1024.0];
+    } else if (dataLength >= 1024) {
+        bytes = [NSString stringWithFormat:@"%0.0fK", dataLength / 1024.0];
+    } else {
+        bytes = [NSString stringWithFormat:@"%zdB", dataLength];
+    }
+    return bytes;
+}
+
 #pragma mark Click Event
 - (void)pickPhotoButtonClick:(UIButton *)sender {
     AlbumNavigationController *navigation = [[AlbumNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
@@ -76,7 +88,12 @@
     // You can get the photos by block, the same as by delegate.
     // 你可以通过block或者代理，来得到用户选择的照片.
     [navigation setDidFinishPickingPhotosHandle:^(NSArray<UIImage *> *photos, NSArray *assets) {
-    
+        for (UIImage *image in photos) {
+            //如果返回的图片还是太大 可以这样压缩
+            NSData *data = UIImageJPEGRepresentation(image, 0.5);
+            NSData *oriData = UIImageJPEGRepresentation(image, 1);      
+            NSLog(@"%@, %@", [self getBytesFromDataLength:data.length], [self getBytesFromDataLength:oriData.length]);
+        }
     }];
     
     // Set the appearance

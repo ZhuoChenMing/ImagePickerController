@@ -26,7 +26,7 @@
 - (instancetype)initWithNavigation:(AlbumNavigationController *)navigation
                 selectedPhotoArray:(NSArray *)selectedPhotoArray
                         photoArray:(NSArray *)photoArray
-                        isHaveOriPhotoButton:(BOOL)isHave;
+          isHavePreviewPhotoButton:(BOOL)isHave;
 
 @end
 

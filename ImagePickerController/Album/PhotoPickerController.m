@@ -28,7 +28,7 @@
 @property (nonatomic, assign) BOOL isSelectOriginalPhoto;
 @property (nonatomic, assign) BOOL shouldScrollToBottom;
 
-@property (nonatomic, strong) NSMutableArray *selectedPhotoArr;
+@property (nonatomic, strong) NSMutableArray *pickerModelArray;
 
 @property CGRect previousPreheatRect;
 
@@ -38,11 +38,11 @@ static CGSize AssetGridThumbnailSize;
 
 @implementation PhotoPickerController
 
-- (NSMutableArray *)selectedPhotoArr {
-    if (_selectedPhotoArr == nil){
-        _selectedPhotoArr = [NSMutableArray array];
+- (NSMutableArray *)pickerModelArray {
+    if (_pickerModelArray == nil) {
+        _pickerModelArray = [NSMutableArray array];
     }
-    return _selectedPhotoArr;
+    return _pickerModelArray;
 }
 
 - (void)viewDidLoad {
@@ -88,7 +88,7 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)configBottomToolBar {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:_selectedPhotoArr photoArray:_selectedPhotoArr isHaveOriPhotoButton:YES];
+    self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:self.pickerModelArray photoArray:self.pickerModelArray isHavePreviewPhotoButton:YES];
     
     [self.toolBarView.previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
     [self.toolBarView.originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
@@ -131,7 +131,7 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)previewButtonClick {
     PhotoPreviewController *photoPreviewVc = [[PhotoPreviewController alloc] init];
-    photoPreviewVc.photoArray = [NSArray arrayWithArray:self.selectedPhotoArr];
+    photoPreviewVc.photoArray = [NSArray arrayWithArray:self.pickerModelArray];
     [self pushPhotoPrevireViewController:photoPreviewVc];
 }
 
@@ -148,28 +148,34 @@ static CGSize AssetGridThumbnailSize;
 - (void)okButtonClick {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
     [navigation showProgressHUD];
-    NSMutableArray *photos = [NSMutableArray array];
-    NSMutableArray *assets = [NSMutableArray array];
-    NSMutableArray *infoArr = [NSMutableArray array];
-    for (NSInteger i = 0; i < _selectedPhotoArr.count; i++) {
-        [photos addObject:@1];
-        [assets addObject:@1];
-        [infoArr addObject:@1];
-    }
-    
-    for (NSInteger i = 0; i < _selectedPhotoArr.count; i++) {
-        PhotoPickerModel *model = _selectedPhotoArr[i];
+    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
+        PhotoPickerModel *model = self.pickerModelArray[i];
+        
+        NSMutableArray *photos = [NSMutableArray array];
+        NSMutableArray *assets = [NSMutableArray array];
+        NSMutableArray *infoArr = [NSMutableArray array];
+        
         [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-            if (isDegraded) return;
-            if (photo) [photos replaceObjectAtIndex:i withObject:photo];
-            if (info) [infoArr replaceObjectAtIndex:i withObject:info];
-            if (_isSelectOriginalPhoto) [assets replaceObjectAtIndex:i withObject:model.asset];
-
-            for (id item in photos) {
-                if ([item isKindOfClass:[NSNumber class]])
-                    return;
+            if (isDegraded) {
+                return;
+            }
+     
+            if (photo) {
+                if (_isSelectOriginalPhoto) {
+                    [photos addObject:photo];
+                    [assets addObject:model.asset];
+                } else {
+                    NSData *decData = UIImageJPEGRepresentation(photo, 0.5);
+                    UIImage *thumbImage = [UIImage imageWithData:decData];
+                    [photos addObject:thumbImage];
+                    [assets removeAllObjects];
+                }
             }
             
+            if (info) {
+                [infoArr addObject:info];
+            }
+   
             if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
                 [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
             }
@@ -177,14 +183,65 @@ static CGSize AssetGridThumbnailSize;
                 [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
             }
             if (navigation.didFinishPickingPhotosHandle) {
-                navigation.didFinishPickingPhotosHandle(photos,assets);
+                navigation.didFinishPickingPhotosHandle(photos, assets);
             }
             if (navigation.didFinishPickingPhotosWithInfosHandle) {
-                navigation.didFinishPickingPhotosWithInfosHandle(photos,assets,infoArr);
+                navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
             }
             [navigation hideProgressHUD];
         }];
     }
+    
+//    NSMutableArray *photos = [NSMutableArray array];
+//    NSMutableArray *assets = [NSMutableArray array];
+//    NSMutableArray *infoArr = [NSMutableArray array];
+    
+//    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
+//        [photos addObject:@1];
+//        [assets addObject:@1];
+//        [infoArr addObject:@1];
+//    }
+    
+//    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
+//        PhotoPickerModel *model = self.pickerModelArray[i];
+//        [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+//            if (isDegraded) {
+//                return;
+//            }
+//            if (photo) {
+//                
+//                [photos replaceObjectAtIndex:i withObject:photo];
+//            }
+//            if (info) {
+//               [infoArr replaceObjectAtIndex:i withObject:info];
+//            }
+//            if (_isSelectOriginalPhoto) {
+//               [assets replaceObjectAtIndex:i withObject:model.asset];
+//            } else {
+//                [assets removeAllObjects];
+//            }
+//
+//            for (id item in photos) {
+//                if ([item isKindOfClass:[NSNumber class]]) {
+//                    return;
+//                }
+//            }
+//            
+//            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
+//                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
+//            }
+//            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
+//                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
+//            }
+//            if (navigation.didFinishPickingPhotosHandle) {
+//                navigation.didFinishPickingPhotosHandle(photos, assets);
+//            }
+//            if (navigation.didFinishPickingPhotosWithInfosHandle) {
+//                navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
+//            }
+//            [navigation hideProgressHUD];
+//        }];
+//    }
 }
 
 #pragma mark - UICollectionViewDataSource && Delegate
@@ -205,15 +262,15 @@ static CGSize AssetGridThumbnailSize;
         if (isSelected) {
             weakCell.selectPhotoButton.selected = NO;
             model.isSelected = NO;
-            [weakSelf.selectedPhotoArr removeObject:model];
+            [weakSelf.pickerModelArray removeObject:model];
             [weakSelf refreshBottomToolBarStatus];
         } else {
             // 2. select:check if over the maxImagesCount / 选择照片,检查是否超过了最大个数的限制
             AlbumNavigationController *navigation = (AlbumNavigationController *)weakSelf.navigationController;
-            if (weakSelf.selectedPhotoArr.count < navigation.maxImagesCount) {
+            if (weakSelf.pickerModelArray.count < navigation.maxImagesCount) {
                 weakCell.selectPhotoButton.selected = YES;
                 model.isSelected = YES;
-                [weakSelf.selectedPhotoArr addObject:model];
+                [weakSelf.pickerModelArray addObject:model];
                 [weakSelf refreshBottomToolBarStatus];
             } else {
                 [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",navigation.maxImagesCount]];
@@ -244,7 +301,7 @@ static CGSize AssetGridThumbnailSize;
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     PhotoPickerModel *model = _photoArr[indexPath.row];
     if (model.type == AlbumModelMediaTypeVideo) {
-        if (_selectedPhotoArr.count > 0) {
+        if (self.pickerModelArray.count > 0) {
             AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
             [navigation showAlertWithTitle:@"选择照片时不能选择视频"];
         } else {
@@ -269,13 +326,13 @@ static CGSize AssetGridThumbnailSize;
 
 #pragma mark - Private Method
 - (void)refreshBottomToolBarStatus {
-    _toolBarView.previewButton.enabled = self.selectedPhotoArr.count > 0;
-    _toolBarView.okButton.enabled = self.selectedPhotoArr.count > 0;
+    _toolBarView.previewButton.enabled = self.pickerModelArray.count > 0;
+    _toolBarView.okButton.enabled = self.pickerModelArray.count > 0;
     
-    _toolBarView.numberLable.hidden = _selectedPhotoArr.count <= 0;
-    _toolBarView.numberLable.text = [NSString stringWithFormat:@"%zd", _selectedPhotoArr.count];
+    _toolBarView.numberLable.hidden = self.pickerModelArray.count <= 0;
+    _toolBarView.numberLable.text = [NSString stringWithFormat:@"%zd", self.pickerModelArray.count];
     
-    _toolBarView.originalPhotoButton.enabled = _selectedPhotoArr.count > 0;
+    _toolBarView.originalPhotoButton.enabled = self.pickerModelArray.count > 0;
     _toolBarView.originalPhotoButton.selected = (_isSelectOriginalPhoto && _toolBarView.originalPhotoButton.enabled);
     _toolBarView.originalPhotoLable.hidden = (!_toolBarView.originalPhotoButton.isSelected);
     if (_isSelectOriginalPhoto) {
@@ -285,17 +342,17 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)pushPhotoPrevireViewController:(PhotoPreviewController *)photoPreviewVc {
     photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
-    photoPreviewVc.selectedPhotoArray = self.selectedPhotoArr;
+    photoPreviewVc.selectedPhotoArray = self.pickerModelArray;
     
     photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        self.selectedPhotoArr = newSelectedPhotoArr;
+        self.pickerModelArray = newSelectedPhotoArr;
         self.isSelectOriginalPhoto = isSelectOriginalPhoto;
         [self.collectionView reloadData];
         [self refreshBottomToolBarStatus];
     };
     photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto){
         if (newSelectedPhotoArr.count != 0) {
-            self.selectedPhotoArr = newSelectedPhotoArr;
+            self.pickerModelArray = newSelectedPhotoArr;
             self.isSelectOriginalPhoto = isSelectOriginalPhoto;
             [self okButtonClick];
         }
@@ -304,7 +361,7 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)getSelectedPhotoBytes {
-    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:_selectedPhotoArr completion:^(NSString *totalBytes) {
+    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:self.pickerModelArray completion:^(NSString *totalBytes) {
         _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
