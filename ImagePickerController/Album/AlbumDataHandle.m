@@ -29,7 +29,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         manager = [[self alloc] init];
-//        manager.cachingImageManager = [[PHCachingImageManager alloc] init];
+        //        manager.cachingImageManager = [[PHCachingImageManager alloc] init];
     });
     return manager;
 }
@@ -219,7 +219,7 @@
         timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
         PhotoPickerModel *model = [PhotoPickerModel modelWithAsset:asset type:type timeLength:timeLength];
         if (completion) {
-           completion(model);
+            completion(model);
         }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
@@ -295,7 +295,7 @@
             if (i >= photos.count - 1) {
                 NSString *bytes = [self getBytesFromDataLength:dataLength];
                 if (completion) {
-                  completion(bytes);
+                    completion(bytes);
                 }
             }
         }
@@ -330,7 +330,7 @@
                 }
             }
         }
-
+        
     }];
 }
 
@@ -387,7 +387,6 @@
         }];
     } else if ([asset isKindOfClass:[ALAsset class]]) {
         ALAsset *alAsset = (ALAsset *)asset;
-        ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
         CGImageRef thumbnailImageRef = alAsset.aspectRatioThumbnail;
         UIImage *thumbnailImage = [UIImage imageWithCGImage:thumbnailImageRef scale:1.0 orientation:UIImageOrientationUp];
         if (completion) {
@@ -395,6 +394,7 @@
         }
         
         if (photoWidth == [UIScreen mainScreen].bounds.size.width) {
+            ALAssetRepresentation *assetRep = [alAsset defaultRepresentation];
             dispatch_async(dispatch_get_global_queue(0, 0), ^{
                 CGImageRef fullScrennImageRef = [assetRep fullScreenImage];
                 UIImage *fullScrennImage = [UIImage imageWithCGImage:fullScrennImageRef scale:1.0 orientation:UIImageOrientationUp];
@@ -405,6 +405,12 @@
                     }
                 });
             });
+            
+            //            CGImageRef fullScrennImageRef = [assetRep fullScreenImage];
+            //            UIImage *fullScrennImage = [UIImage imageWithCGImage:fullScrennImageRef scale:1.0 orientation:UIImageOrientationUp];
+            //            if (completion) {
+            //                completion(fullScrennImage, nil, NO);
+            //            }
         }
     }
 }
@@ -420,7 +426,7 @@
         ALAssetsGroup *gruop = model.result;
         UIImage *postImage = [UIImage imageWithCGImage:gruop.posterImage];
         if (completion) {
-           completion(postImage);
+            completion(postImage);
         }
     }
 }

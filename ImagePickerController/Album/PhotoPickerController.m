@@ -148,19 +148,19 @@ static CGSize AssetGridThumbnailSize;
 - (void)okButtonClick {
     AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
     [navigation showProgressHUD];
-    
-    NSMutableArray *photos = [NSMutableArray array];
-    NSMutableArray *assets = [NSMutableArray array];
-    NSMutableArray *infoArr = [NSMutableArray array];
+
+    __block NSMutableArray *photos = [NSMutableArray array];
+    __block  NSMutableArray *assets = [NSMutableArray array];
+    __block  NSMutableArray *infoArr = [NSMutableArray array];
+    __block NSMutableArray *indexArray = [NSMutableArray array];
+    __block NSInteger loopCount = 0;
     
     for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
         PhotoPickerModel *model = self.pickerModelArray[i];
-        
         [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if (isDegraded) {
                 return;
             }
-            
             if (photo) {
                 if (_isSelectOriginalPhoto) {
                     [photos addObject:photo];
@@ -176,10 +176,26 @@ static CGSize AssetGridThumbnailSize;
             if (info) {
                 [infoArr addObject:info];
             }
-            
-            if (i == self.pickerModelArray.count - 1) {
+            [indexArray addObject:[NSString stringWithFormat:@"%ld", i]];
+            loopCount++;
+            if (loopCount == self.pickerModelArray.count) {
+                for (int m = 0; m < indexArray.count - 1; m++) {
+                    for (int n = m + 1; n < indexArray.count; n++) {
+                        if (indexArray[m] > indexArray[n]) {
+                            UIImage *temImage = photos[n];
+                            photos[n] = photos[m];
+                            photos[m] = temImage;
+                            
+                            NSString *str = indexArray[n];
+                            indexArray[n] = indexArray[m];
+                            indexArray[m] = str;
+                            
+                        }
+                    }
+                }
                 if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
                     [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
+                    [photos removeAllObjects];
                 }
                 if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
                     [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
@@ -194,57 +210,6 @@ static CGSize AssetGridThumbnailSize;
             }
         }];
     }
-    
-//    NSMutableArray *photos = [NSMutableArray array];
-//    NSMutableArray *assets = [NSMutableArray array];
-//    NSMutableArray *infoArr = [NSMutableArray array];
-    
-//    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
-//        [photos addObject:@1];
-//        [assets addObject:@1];
-//        [infoArr addObject:@1];
-//    }
-    
-//    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
-//        PhotoPickerModel *model = self.pickerModelArray[i];
-//        [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-//            if (isDegraded) {
-//                return;
-//            }
-//            if (photo) {
-//                
-//                [photos replaceObjectAtIndex:i withObject:photo];
-//            }
-//            if (info) {
-//               [infoArr replaceObjectAtIndex:i withObject:info];
-//            }
-//            if (_isSelectOriginalPhoto) {
-//               [assets replaceObjectAtIndex:i withObject:model.asset];
-//            } else {
-//                [assets removeAllObjects];
-//            }
-//
-//            for (id item in photos) {
-//                if ([item isKindOfClass:[NSNumber class]]) {
-//                    return;
-//                }
-//            }
-//            
-//            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
-//                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
-//            }
-//            if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
-//                [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
-//            }
-//            if (navigation.didFinishPickingPhotosHandle) {
-//                navigation.didFinishPickingPhotosHandle(photos, assets);
-//            }
-//            if (navigation.didFinishPickingPhotosWithInfosHandle) {
-//                navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
-//            }
-//            [navigation hideProgressHUD];
-//        }];
-//    }
 }
 
 #pragma mark - UICollectionViewDataSource && Delegate

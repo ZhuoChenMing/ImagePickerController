@@ -117,8 +117,16 @@
 
 /// User finish picking photo，if assets are not empty, user picking original photo.
 /// 用户选择好了图片，如果assets非空，则用户选择了原图。
-- (void)albumNavigationController:(AlbumNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets{
-    [_selectedPhotos addObjectsFromArray:photos];
+- (void)albumNavigationController:(AlbumNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets {
+    
+    NSMutableArray *imageArray = [NSMutableArray array];
+    for (int i = 0; i < photos.count; i++) {
+        UIImage *temImage = photos[i];
+        NSData *data = UIImageJPEGRepresentation(temImage, 0.1);
+        [imageArray addObject:[UIImage imageWithData:data]];
+    }
+    
+    [_selectedPhotos addObjectsFromArray:imageArray];
     [_collectionView reloadData];
     _collectionView.contentSize = CGSizeMake(0, ((_selectedPhotos.count + 2) / 3 ) * (_margin + _itemWH));
 }
