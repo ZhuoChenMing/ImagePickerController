@@ -14,7 +14,7 @@
 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) UILabel *tipLable;
-@property (nonatomic, assign) BOOL pushToPhotoPickerVc;
+//@property (nonatomic, assign) BOOL pushToPhotoPickerVc;
 
 @property (nonatomic, strong) UIButton *progressHUD;
 @property (nonatomic, strong) UIView *HUDContainer;
@@ -82,7 +82,7 @@
             [self.view addSubview:_tipLable];
             
             _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-            dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 0 * NSEC_PER_SEC, 5 * NSEC_PER_SEC);
+            dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 0 * NSEC_PER_SEC, 0.5 * NSEC_PER_SEC);
             dispatch_source_set_event_handler(_timer, ^{
                 [self observeAuthrizationStatusChange];
             });
@@ -96,29 +96,35 @@
 
 - (void)observeAuthrizationStatusChange {
     if ([[AlbumDataHandle manager] authorizationStatusAuthorized]) {
-        [self pushToPhotoPickerViewController];
-        [_tipLable removeFromSuperview];
         if (_timer) {
             dispatch_source_cancel(_timer);
+        }
+        
+        if ([[NSThread currentThread] isMainThread]) {
+            [_tipLable removeFromSuperview];
+            [self pushToPhotoPickerViewController];
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [_tipLable removeFromSuperview];
+                [self pushToPhotoPickerViewController];
+            });
         }
     }
 }
 
 - (void)pushToPhotoPickerViewController {
-    _pushToPhotoPickerVc = YES;
-    if (_pushToPhotoPickerVc) {
-        //        PhotoPickerController *photoPickerVc = [[PhotoPickerController alloc] init];
-        //        [[AlbumDataHandle manager] getCameraRollAlbum:self.allowPickingVideo completion:^(AlbumDataModel *model) {
-        //            photoPickerVc.model = model;
-        //            [self pushViewController:photoPickerVc animated:YES];
-        //            _pushToPhotoPickerVc = NO;
-        //        }];
-        
-        AlbumListController *list = [[AlbumListController alloc] init];
-        list.navigationItem.hidesBackButton = YES;
-        
-        [self pushViewController:list animated:YES];
-    }
+//    _pushToPhotoPickerVc = YES;
+//    if (_pushToPhotoPickerVc) {
+//        PhotoPickerController *photoPickerVc = [[PhotoPickerController alloc] init];
+//        [[AlbumDataHandle manager] getCameraRollAlbum:self.allowPickingVideo completion:^(AlbumDataModel *model) {
+//            photoPickerVc.model = model;
+//            [self pushViewController:photoPickerVc animated:YES];
+//            _pushToPhotoPickerVc = NO;
+//        }];
+//    }
+    AlbumListController *list = [[AlbumListController alloc] init];
+    list.navigationItem.hidesBackButton = YES;
+    [self pushViewController:list animated:YES];
 }
 
 #pragma clang diagnostic push
@@ -176,19 +182,16 @@
     if (iOS7Later) {
         viewController.automaticallyAdjustsScrollViewInsets = NO;
     }
-    if (_timer) {
-        dispatch_source_cancel(_timer);
-    }
-    
-    if (self.childViewControllers.count > 0) {
-        //        UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(-8, 0, 44, 44)];
-        //        [backButton setImage:[UIImage imageNamed:@"navi_back"] forState:UIControlStateNormal];
-        //        backButton.imageEdgeInsets = UIEdgeInsetsMake(0, -5, 0, 0);
-        //        [backButton setTitle:@"返回" forState:UIControlStateNormal];
-        //        backButton.titleLabel.font = [UIFont systemFontOfSize:15];
-        //        [backButton addTarget:self action:@selector(popViewControllerAnimated:) forControlEvents:UIControlEventTouchUpInside];
-        //        viewController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
-    }
+
+//    if (self.childViewControllers.count > 0) {
+//        UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(-8, 0, 44, 44)];
+//        [backButton setImage:[UIImage imageNamed:@"navi_back"] forState:UIControlStateNormal];
+//        backButton.imageEdgeInsets = UIEdgeInsetsMake(0, -5, 0, 0);
+//        [backButton setTitle:@"返回" forState:UIControlStateNormal];
+//        backButton.titleLabel.font = [UIFont systemFontOfSize:15];
+//        [backButton addTarget:self action:@selector(popViewControllerAnimated:) forControlEvents:UIControlEventTouchUpInside];
+//        viewController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
+//    }
     [super pushViewController:viewController animated:animated];
 }
 
