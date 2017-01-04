@@ -1,6 +1,6 @@
 //
 //  AddCollectionViewCell.h
-//  AlbumListController
+//  PhotosViewController
 //
 //  Created by 酌晨茗 on 16/1/3.
 //  Copyright © 2016年 酌晨茗. All rights reserved.

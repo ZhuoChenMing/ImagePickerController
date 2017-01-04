@@ -1,29 +1,29 @@
 //
-//  AlbumListTableViewCell.m
+//  PhotosTableViewCell.m
 //  ImagePickerController
 //
 //  Created by 酌晨茗 on 16/3/2.
 //  Copyright © 2016年 酌晨茗. All rights reserved.
 //
 
-#import "AlbumListTableViewCell.h"
-#import "AlbumDataModel.h"
-#import "AlbumDataHandle.h"
+#import "PhotosTableViewCell.h"
+#import "PhotosDataModel.h"
+#import "PhotosDataHandle.h"
 
 #define iOS7Later ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f)
 #define iOS8Later ([UIDevice currentDevice].systemVersion.floatValue >= 8.0f)
 #define iOS9Later ([UIDevice currentDevice].systemVersion.floatValue >= 9.0f)
 #define iOS9_1Later ([UIDevice currentDevice].systemVersion.floatValue >= 9.1f)
 
-@interface AlbumListTableViewCell ()
+@interface PhotosTableViewCell ()
 
-@property (strong, nonatomic) UIImageView *albumImageView;
+@property (nonatomic, strong) UIImageView *albumImageView;
 
-@property (strong, nonatomic) UILabel *titleLable;
+@property (nonatomic, strong) UILabel *titleLable;
 
 @end
 
-@implementation AlbumListTableViewCell
+@implementation PhotosTableViewCell
 
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
@@ -40,13 +40,13 @@
     return self;
 }
 
-- (void)setModel:(AlbumDataModel *)model {
+- (void)setModel:(PhotosDataModel *)model {
     _model = model;
     NSMutableAttributedString *nameString = [[NSMutableAttributedString alloc] initWithString:model.name attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:16],NSForegroundColorAttributeName:[UIColor blackColor]}];
     NSAttributedString *countString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"  (%zd)", model.count] attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:16], NSForegroundColorAttributeName:[UIColor lightGrayColor]}];
     [nameString appendAttributedString:countString];
     self.titleLable.attributedText = nameString;
-    [[AlbumDataHandle manager] getPostImageWithAlbumModel:model completion:^(UIImage *postImage) {
+    [[PhotosDataHandle manager] getPostImageWithAlbumModel:model completion:^(UIImage *postImage) {
         self.albumImageView.image = postImage;
     }];
 }
@@ -61,10 +61,6 @@
     if (iOS7Later) {
         [super layoutSublayersOfLayer:layer];
     }
-}
-
-- (void)awakeFromNib {
-    // Initialization code
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

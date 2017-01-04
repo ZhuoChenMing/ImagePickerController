@@ -1,20 +1,21 @@
 //
-//  AlbumNavigationController.m
+//  PhotosNavigationController.m
 //  ImagePickerController
 //
 //  Created by 酌晨茗 on 16/3/7.
 //  Copyright © 2016年 酌晨茗. All rights reserved.
 //
 
-#import "AlbumNavigationController.h"
-#import "AlbumListController.h"
-#import "AlbumDataHandle.h"
+#import "PhotosNavigationController.h"
+#import "PhotosViewController.h"
+#import "PhotosDataHandle.h"
 
-@interface AlbumNavigationController ()
+#import "PhotoPickerController.h"
+
+@interface PhotosNavigationController ()
 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) UILabel *tipLable;
-//@property (nonatomic, assign) BOOL pushToPhotoPickerVc;
 
 @property (nonatomic, strong) UIButton *progressHUD;
 @property (nonatomic, strong) UIView *HUDContainer;
@@ -23,43 +24,10 @@
 
 @end
 
-@implementation AlbumNavigationController
+@implementation PhotosNavigationController
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationBar.barStyle = UIBarStyleBlack;
-    self.navigationBar.translucent = YES;
-    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
-    [UIApplication sharedApplication].statusBarHidden = NO;
-    
-    // 默认的外观，你可以在这个方法后重置
-    self.oKButtonTitleColorNormal = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:1.0];
-    self.oKButtonTitleColorDisabled = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:0.5];
-    
-    if (iOS7Later) {
-        self.navigationBar.barTintColor = [UIColor colorWithRed:(34 / 255.0) green:(34 / 255.0)  blue:(34 / 255.0) alpha:1.0];
-        self.navigationBar.tintColor = [UIColor whiteColor];
-        self.automaticallyAdjustsScrollViewInsets = NO;
-    }
-    
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    UIBarButtonItem *barItem;
-    if (iOS9Later) {
-        barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[AlbumListController class]]];
-    } else {
-        barItem = [UIBarButtonItem appearanceWhenContainedIn:[AlbumListController class], nil];
-    }
-#pragma clang diagnostic pop    
-    NSMutableDictionary *textAttrs = [NSMutableDictionary dictionary];
-    textAttrs[NSForegroundColorAttributeName] = [UIColor whiteColor];
-    textAttrs[NSFontAttributeName] = [UIFont systemFontOfSize:15];
-    [barItem setTitleTextAttributes:textAttrs forState:UIControlStateNormal];
-}
-
-- (instancetype)initWithMaxImagesCount:(NSInteger)maxImagesCount delegate:(id<AlbumNavigationControllerDelegate>)delegate {
-    AlbumListController *albumPickerVc = [[AlbumListController alloc] init];
+- (instancetype)initWithMaxImagesCount:(NSInteger)maxImagesCount delegate:(id<PhotosNavigationControllerDelegate>)delegate {
+    PhotosViewController *albumPickerVc = [[PhotosViewController alloc] init];
     self = [super initWithRootViewController:albumPickerVc];
     if (self) {
         self.maxImagesCount = maxImagesCount > 0 ? maxImagesCount : 9; // Default is 9 / 默认最大可选9张图片
@@ -69,7 +37,7 @@
         _allowPickingOriginalPhoto = YES;
         _allowPickingVideo = YES;
         
-        if (![[AlbumDataHandle manager] authorizationStatusAuthorized]) {
+        if (![[PhotosDataHandle manager] authorizationStatusAuthorized]) {
             _tipLable = [[UILabel alloc] init];
             _tipLable.frame = CGRectMake(8, 0, CGRectGetWidth(self.view.frame) - 16, 300);
             _tipLable.textAlignment = NSTextAlignmentCenter;
@@ -94,8 +62,42 @@
     return self;
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.barStyle = UIBarStyleBlack;
+    self.navigationBar.translucent = YES;
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+    [UIApplication sharedApplication].statusBarHidden = NO;
+    
+    // 默认的外观，你可以在这个方法后重置
+    self.oKButtonTitleColorNormal = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:1.0];
+    self.oKButtonTitleColorDisabled = [UIColor colorWithRed:(83 / 255.0) green:(179 / 255.0) blue:(17 / 255.0) alpha:0.5];
+    
+    if (iOS7Later) {
+        self.navigationBar.barTintColor = [UIColor colorWithRed:(34 / 255.0) green:(34 / 255.0)  blue:(34 / 255.0) alpha:1.0];
+        self.navigationBar.tintColor = [UIColor whiteColor];
+        self.automaticallyAdjustsScrollViewInsets = NO;
+    }
+    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    UIBarButtonItem *barItem;
+    if (iOS9Later) {
+        barItem = [UIBarButtonItem appearanceWhenContainedInInstancesOfClasses:@[[PhotosViewController class]]];
+    } else {
+        barItem = [UIBarButtonItem appearanceWhenContainedIn:[PhotosViewController class], nil];
+    }
+#pragma clang diagnostic pop    
+    NSMutableDictionary *textAttrs = [NSMutableDictionary dictionary];
+    textAttrs[NSForegroundColorAttributeName] = [UIColor whiteColor];
+    textAttrs[NSFontAttributeName] = [UIFont systemFontOfSize:15];
+    [barItem setTitleTextAttributes:textAttrs forState:UIControlStateNormal];
+}
+
 - (void)observeAuthrizationStatusChange {
-    if ([[AlbumDataHandle manager] authorizationStatusAuthorized]) {
+    if ([[PhotosDataHandle manager] authorizationStatusAuthorized]) {
         if (_timer) {
             dispatch_source_cancel(_timer);
         }
@@ -113,18 +115,15 @@
 }
 
 - (void)pushToPhotoPickerViewController {
-//    _pushToPhotoPickerVc = YES;
-//    if (_pushToPhotoPickerVc) {
-//        PhotoPickerController *photoPickerVc = [[PhotoPickerController alloc] init];
-//        [[AlbumDataHandle manager] getCameraRollAlbum:self.allowPickingVideo completion:^(AlbumDataModel *model) {
-//            photoPickerVc.model = model;
-//            [self pushViewController:photoPickerVc animated:YES];
-//            _pushToPhotoPickerVc = NO;
-//        }];
-//    }
-    AlbumListController *list = [[AlbumListController alloc] init];
-    list.navigationItem.hidesBackButton = YES;
-    [self pushViewController:list animated:YES];
+//    PhotoPickerController *pickerVC = [[PhotoPickerController alloc] init];
+//    [[PhotosDataHandle manager] getCameraRollAlbum:self.allowPickingVideo completion:^(PhotosDataModel *model) {
+//        pickerVC.model = model;
+//        [self pushViewController:pickerVC animated:YES];
+//    }];
+    
+    PhotosViewController *listVC = [[PhotosViewController alloc] init];
+    listVC.navigationItem.hidesBackButton = YES;
+    [self pushViewController:listVC animated:YES];
 }
 
 #pragma clang diagnostic push

@@ -1,16 +1,16 @@
 //
 //  ViewController.m
-//  AlbumListController
+//  PhotosViewController
 //
 //  Created by 酌晨茗 on 15/12/24.
 //  Copyright © 2015年 酌晨茗. All rights reserved.
 //
 
 #import "ViewController.h"
-#import "AlbumNavigationController.h"
+#import "PhotosNavigationController.h"
 #import "AddCollectionViewCell.h"
 
-@interface ViewController ()<AlbumNavigationControllerDelegate, UICollectionViewDataSource,UICollectionViewDelegate> {
+@interface ViewController ()<PhotosNavigationControllerDelegate, UICollectionViewDataSource,UICollectionViewDelegate> {
     UICollectionView *_collectionView;
     NSMutableArray *_selectedPhotos;
     NSMutableArray *_selectedAssets;
@@ -32,15 +32,15 @@
 
 - (void)configCollectionView {
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    _margin = 4;
+    _margin = 10;
     _itemWH = (CGRectGetWidth(self.view.frame) - 2 * _margin - 4) / 3 - _margin;
     layout.itemSize = CGSizeMake(_itemWH, _itemWH);
     layout.minimumInteritemSpacing = _margin;
     layout.minimumLineSpacing = _margin;
     
     
-    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(_margin, 10, CGRectGetWidth(self.view.frame) - 2 * _margin, 500) collectionViewLayout:layout];
-    _collectionView.backgroundColor = [UIColor lightGrayColor];
+    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(_margin, 20, CGRectGetWidth(self.view.frame) - 2 * _margin, CGRectGetHeight(self.view.frame) - 20) collectionViewLayout:layout];
+    _collectionView.backgroundColor = [UIColor whiteColor];
     _collectionView.contentInset = UIEdgeInsetsMake(4, 0, 0, 2);
     _collectionView.scrollIndicatorInsets = UIEdgeInsetsMake(0, 0, 0, -2);
     _collectionView.dataSource = self;
@@ -49,8 +49,7 @@
     [_collectionView registerClass:[AddCollectionViewCell class] forCellWithReuseIdentifier:@"AddCollectionViewCell"];
 }
 
-#pragma mark UICollectionView
-
+#pragma mark - UICollectionView
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     return _selectedPhotos.count + 1;
 }
@@ -83,7 +82,7 @@
 
 #pragma mark Click Event
 - (void)pickPhotoButtonClick:(UIButton *)sender {
-    AlbumNavigationController *navigation = [[AlbumNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
+    PhotosNavigationController *navigation = [[PhotosNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
     
     // You can get the photos by block, the same as by delegate.
     // 你可以通过block或者代理，来得到用户选择的照片.
@@ -111,13 +110,13 @@
 }
 
 #pragma mark - 用户点击了取消
-- (void)albumNavigationControllerDidCancel:(AlbumNavigationController *)picker {
+- (void)PhotosNavigationControllerDidCancel:(PhotosNavigationController *)picker {
     // NSLog(@"cancel");
 }
 
 /// User finish picking photo，if assets are not empty, user picking original photo.
 /// 用户选择好了图片，如果assets非空，则用户选择了原图。
-- (void)albumNavigationController:(AlbumNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets {
+- (void)PhotosNavigationController:(PhotosNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets {
     
     NSMutableArray *imageArray = [NSMutableArray array];
     for (int i = 0; i < photos.count; i++) {
@@ -133,7 +132,7 @@
 
 /// User finish picking video,
 /// 用户选择好了视频
-- (void)albumNavigationController:(AlbumNavigationController *)picker didFinishPickingVideo:(UIImage *)coverImage sourceAssets:(id)asset {
+- (void)PhotosNavigationController:(PhotosNavigationController *)picker didFinishPickingVideo:(UIImage *)coverImage sourceAssets:(id)asset {
     [_selectedPhotos addObjectsFromArray:@[coverImage]];
     [_collectionView reloadData];
     _collectionView.contentSize = CGSizeMake(0, ((_selectedPhotos.count + 2) / 3 ) * (_margin + _itemWH));

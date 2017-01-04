@@ -9,9 +9,9 @@
 #import "VideoPlayerController.h"
 #import <MediaPlayer/MediaPlayer.h>
 
-#import "AlbumDataHandle.h"
+#import "PhotosDataHandle.h"
 #import "PhotoPickerModel.h"
-#import "AlbumListController.h"
+#import "PhotosViewController.h"
 #import "PhotoPreviewController.h"
 
 @interface VideoPlayerController () {
@@ -36,10 +36,10 @@
 
 - (void)configMoviePlayer {
     
-    [[AlbumDataHandle manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+    [[PhotosDataHandle manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         _cover = photo;
     }];
-    [[AlbumDataHandle manager] getVideoWithAsset:_model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
+    [[PhotosDataHandle manager] getVideoWithAsset:_model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
             _player = [AVPlayer playerWithPlayerItem:playerItem];
             AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
@@ -86,7 +86,7 @@
     _okButton.titleLabel.font = [UIFont systemFontOfSize:16];
     [_okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
     [_okButton setTitle:@"确定" forState:UIControlStateNormal];
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
     [_okButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
     
     [_toolBar addSubview:_okButton];
@@ -114,9 +114,9 @@
 }
 
 - (void)okButtonClick {
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingVideo:sourceAssets:)]) {
-        [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingVideo:_cover sourceAssets:_model.asset];
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
+    if ([navigation.pickerDelegate respondsToSelector:@selector(PhotosNavigationController:didFinishPickingVideo:sourceAssets:)]) {
+        [navigation.pickerDelegate PhotosNavigationController:navigation didFinishPickingVideo:_cover sourceAssets:_model.asset];
     }
     if (navigation.didFinishPickingVideoHandle) {
         navigation.didFinishPickingVideoHandle(_cover,_model.asset);

@@ -10,11 +10,11 @@
 #import "PhotoPickerCell.h"
 #import "PhotoPickerModel.h"
 
-#import "AlbumListController.h"
-#import "AlbumDataModel.h"
+#import "PhotosViewController.h"
+#import "PhotosDataModel.h"
 
 #import "PhotoPreviewController.h"
-#import "AlbumDataHandle.h"
+#import "PhotosDataHandle.h"
 #import "VideoPlayerController.h"
 
 @interface PhotoPickerController ()<UICollectionViewDataSource, UICollectionViewDelegate>
@@ -53,8 +53,8 @@ static CGSize AssetGridThumbnailSize;
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    [[AlbumDataHandle manager] getAssetsFromFetchResult:_model.result allowPickingVideo:navigation.allowPickingVideo completion:^(NSArray<PhotoPickerModel *> *models) {
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
+    [[PhotosDataHandle manager] getAssetsFromFetchResult:_model.result allowPickingVideo:navigation.allowPickingVideo completion:^(NSArray<PhotoPickerModel *> *models) {
         _photoArr = [NSMutableArray arrayWithArray:models];
         [self configCollectionView];
         [self configBottomToolBar];
@@ -87,7 +87,7 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)configBottomToolBar {
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
     self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:self.pickerModelArray photoArray:self.pickerModelArray isHavePreviewPhotoButton:YES];
     
     [self.toolBarView.previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
@@ -120,12 +120,12 @@ static CGSize AssetGridThumbnailSize;
 #pragma mark - 点击事件
 - (void)cancel {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationControllerDidCancel:)]) {
-        [navigation.pickerDelegate albumNavigationControllerDidCancel:navigation];
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
+    if ([navigation.pickerDelegate respondsToSelector:@selector(PhotosNavigationControllerDidCancel:)]) {
+        [navigation.pickerDelegate PhotosNavigationControllerDidCancel:navigation];
     }
-    if (navigation.albumNavigationControllerDidCancelHandle) {
-        navigation.albumNavigationControllerDidCancelHandle();
+    if (navigation.PhotosNavigationControllerDidCancelHandle) {
+        navigation.PhotosNavigationControllerDidCancelHandle();
     }
 }
 
@@ -146,7 +146,7 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)okButtonClick {
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
     [navigation showProgressHUD];
 
     __block NSMutableArray *photos = [NSMutableArray array];
@@ -157,7 +157,7 @@ static CGSize AssetGridThumbnailSize;
     
     for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
         PhotoPickerModel *model = self.pickerModelArray[i];
-        [[AlbumDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+        [[PhotosDataHandle manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
             if (isDegraded) {
                 return;
             }
@@ -193,12 +193,12 @@ static CGSize AssetGridThumbnailSize;
                         }
                     }
                 }
-                if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
-                    [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
+                if ([navigation.pickerDelegate respondsToSelector:@selector(PhotosNavigationController:didFinishPickingPhotos:sourceAssets:)]) {
+                    [navigation.pickerDelegate PhotosNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
                     [photos removeAllObjects];
                 }
-                if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
-                    [navigation.pickerDelegate albumNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
+                if ([navigation.pickerDelegate respondsToSelector:@selector(PhotosNavigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
+                    [navigation.pickerDelegate PhotosNavigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
                 }
                 if (navigation.didFinishPickingPhotosHandle) {
                     navigation.didFinishPickingPhotosHandle(photos, assets);
@@ -234,7 +234,7 @@ static CGSize AssetGridThumbnailSize;
             [weakSelf refreshBottomToolBarStatus];
         } else {
             // 2. select:check if over the maxImagesCount / 选择照片,检查是否超过了最大个数的限制
-            AlbumNavigationController *navigation = (AlbumNavigationController *)weakSelf.navigationController;
+            PhotosNavigationController *navigation = (PhotosNavigationController *)weakSelf.navigationController;
             if (weakSelf.pickerModelArray.count < navigation.maxImagesCount) {
                 weakCell.selectPhotoButton.selected = YES;
                 model.isSelected = YES;
@@ -270,7 +270,7 @@ static CGSize AssetGridThumbnailSize;
     PhotoPickerModel *model = _photoArr[indexPath.row];
     if (model.type == AlbumModelMediaTypeVideo) {
         if (self.pickerModelArray.count > 0) {
-            AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+            PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
             [navigation showAlertWithTitle:@"选择照片时不能选择视频"];
         } else {
             VideoPlayerController *videoPlayerVc = [[VideoPlayerController alloc] init];
@@ -329,14 +329,14 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)getSelectedPhotoBytes {
-    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:self.pickerModelArray completion:^(NSString *totalBytes) {
+    [[PhotosDataHandle manager] getPhotoBytesWithPhotoArray:self.pickerModelArray completion:^(NSString *totalBytes) {
         _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 
 #pragma mark - Asset Caching
 - (void)resetCachedAssets {
-    [[AlbumDataHandle manager].cachingImageManager stopCachingImagesForAllAssets];
+    [[PhotosDataHandle manager].cachingImageManager stopCachingImagesForAllAssets];
     self.previousPreheatRect = CGRectZero;
 }
 
@@ -373,8 +373,8 @@ static CGSize AssetGridThumbnailSize;
         NSArray *assetsToStopCaching = [self assetsAtIndexPaths:removedIndexPaths];
         
         // Update the assets the PHCachingImageManager is caching.
-        [[AlbumDataHandle manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
-        [[AlbumDataHandle manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[PhotosDataHandle manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[PhotosDataHandle manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
         
         // Store the preheat rect to compare against in the future.
         self.previousPreheatRect = preheatRect;

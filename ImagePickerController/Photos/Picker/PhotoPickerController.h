@@ -1,5 +1,5 @@
 //
-//  AlbumListController.h
+//  PhotoPickerController.h
 //  ImagePickerController
 //
 //  Created by 酌晨茗 on 15/12/24.
@@ -7,8 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "AlbumNavigationController.h"
 
-@interface AlbumListController : UIViewController
+@class PhotosDataModel;
+
+@interface PhotoPickerController : UIViewController
+
+@property (nonatomic, strong) PhotosDataModel *model;
 
 @end

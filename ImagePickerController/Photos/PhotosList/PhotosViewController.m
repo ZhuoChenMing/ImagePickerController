@@ -1,17 +1,17 @@
 //
-//  AlbumListController.m
+//  PhotosViewController.m
 //  ImagePickerController
 //
 //  Created by 酌晨茗 on 15/12/24.
 //  Copyright © 2015年 酌晨茗. All rights reserved.
 //
 
-#import "AlbumListController.h"
-#import "AlbumListTableViewCell.h"
+#import "PhotosViewController.h"
+#import "PhotosTableViewCell.h"
 #import "PhotoPickerController.h"
-#import "AlbumDataHandle.h"
+#import "PhotosDataHandle.h"
 
-@interface AlbumListController ()<UITableViewDataSource, UITableViewDelegate>
+@interface PhotosViewController ()<UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) UITableView *tableView;
 
@@ -19,7 +19,7 @@
 
 @end
 
-@implementation AlbumListController
+@implementation PhotosViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -38,8 +38,8 @@
 }
 
 - (void)configTableView {
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    [[AlbumDataHandle manager] getAllAlbums:navigation.allowPickingVideo completion:^(NSArray<AlbumDataModel *> *models) {
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
+    [[PhotosDataHandle manager] getAllAlbums:navigation.allowPickingVideo completion:^(NSArray<PhotosDataModel *> *models) {
         _albumArray = [NSMutableArray arrayWithArray:models];
         
         CGFloat top = 44;
@@ -51,7 +51,7 @@
         _tableView.tableFooterView = [[UIView alloc] init];
         _tableView.dataSource = self;
         _tableView.delegate = self;
-        [_tableView registerClass:[AlbumListTableViewCell class] forCellReuseIdentifier:@"ListCell"];
+        [_tableView registerClass:[PhotosTableViewCell class] forCellReuseIdentifier:@"ListCell"];
         [self.view addSubview:_tableView];
     }];
 }
@@ -59,12 +59,12 @@
 #pragma mark - Click Event
 - (void)cancel {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
-    if ([navigation.pickerDelegate respondsToSelector:@selector(albumNavigationControllerDidCancel:)]) {
-        [navigation.pickerDelegate albumNavigationControllerDidCancel:navigation];
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
+    if ([navigation.pickerDelegate respondsToSelector:@selector(PhotosNavigationControllerDidCancel:)]) {
+        [navigation.pickerDelegate PhotosNavigationControllerDidCancel:navigation];
     }
-    if (navigation.albumNavigationControllerDidCancelHandle) {
-        navigation.albumNavigationControllerDidCancelHandle();
+    if (navigation.PhotosNavigationControllerDidCancelHandle) {
+        navigation.PhotosNavigationControllerDidCancelHandle();
     }
 }
 
@@ -78,7 +78,7 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    AlbumListTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ListCell"];
+    PhotosTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ListCell"];
     cell.model = _albumArray[indexPath.row];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     return cell;

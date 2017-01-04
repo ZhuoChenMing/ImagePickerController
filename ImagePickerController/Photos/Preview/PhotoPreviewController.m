@@ -9,12 +9,12 @@
 #import "PhotoPreviewController.h"
 #import "PhotoPreviewCell.h"
 #import "PhotoPickerModel.h"
-#import "AlbumListController.h"
-#import "AlbumDataHandle.h"
+#import "PhotosViewController.h"
+#import "PhotosDataHandle.h"
 
 @implementation PhotoToolBarView
 
-- (instancetype)initWithNavigation:(AlbumNavigationController *)navigation
+- (instancetype)initWithNavigation:(PhotosNavigationController *)navigation
                 selectedPhotoArray:(NSArray *)selectedPhotoArray
                         photoArray:(NSArray *)photoArray
           isHavePreviewPhotoButton:(BOOL)isHave {
@@ -74,7 +74,7 @@
             _originalPhotoLable.font = [UIFont systemFontOfSize:16];
             _originalPhotoLable.textColor = navigation.oKButtonTitleColorNormal;
             if (isHave) {
-                [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:photoArray completion:^(NSString *totalBytes) {
+                [[PhotosDataHandle manager] getPhotoBytesWithPhotoArray:photoArray completion:^(NSString *totalBytes) {
                     self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
                 }];
             }
@@ -178,7 +178,7 @@
 }
 
 - (void)configBottomToolBar {
-    AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+    PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
     self.toolBarView = [[PhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:_selectedPhotoArray photoArray:_photoArray isHavePreviewPhotoButton:NO];
     
     [self.toolBarView.originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
@@ -192,7 +192,7 @@
     PhotoPickerModel *model = _photoArray[_currentIndex];
     if (!selectButton.isSelected) {
         // 1. 选择照片,检查是否超过了最大个数的限制
-        AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+        PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
         if (self.selectedPhotoArray.count >= navigation.maxImagesCount) {
             [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",navigation.maxImagesCount]];
             return;
@@ -200,7 +200,7 @@
         } else {
             [self.selectedPhotoArray addObject:model];
             if (model.type == AlbumModelMediaTypeVideo) {
-                AlbumNavigationController *navigation = (AlbumNavigationController *)self.navigationController;
+                PhotosNavigationController *navigation = (PhotosNavigationController *)self.navigationController;
                 [navigation showAlertWithTitle:@"多选状态下选择视频，默认将视频当图片发送"];
             }
         }
@@ -339,7 +339,7 @@
 }
 
 - (void)showPhotoBytes {
-    [[AlbumDataHandle manager] getPhotoBytesWithPhotoArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
+    [[PhotosDataHandle manager] getPhotoBytesWithPhotoArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
         _toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }

@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "AlbumNavigationController.h"
+#import "PhotosNavigationController.h"
 
 @interface PhotoToolBarView : UIView
 
@@ -23,7 +23,7 @@
 
 @property (nonatomic, strong) UILabel *originalPhotoLable;
 
-- (instancetype)initWithNavigation:(AlbumNavigationController *)navigation
+- (instancetype)initWithNavigation:(PhotosNavigationController *)navigation
                 selectedPhotoArray:(NSArray *)selectedPhotoArray
                         photoArray:(NSArray *)photoArray
           isHavePreviewPhotoButton:(BOOL)isHave;
