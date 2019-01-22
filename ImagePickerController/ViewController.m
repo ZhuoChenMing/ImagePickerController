@@ -1,16 +1,16 @@
 //
 //  ViewController.m
-//  PhotosViewController
+//  PMAlbumViewController
 //
 //  Created by 酌晨茗 on 15/12/24.
 //  Copyright © 2015年 酌晨茗. All rights reserved.
 //
 
 #import "ViewController.h"
-#import "PhotosNavigationController.h"
+#import "PMNavigationController.h"
 #import "AddCollectionViewCell.h"
 
-@interface ViewController ()<PhotosNavigationControllerDelegate, UICollectionViewDataSource,UICollectionViewDelegate> {
+@interface ViewController ()<PMNavigationControllerDelegate, UICollectionViewDataSource,UICollectionViewDelegate> {
     UICollectionView *_collectionView;
     NSMutableArray *_selectedPhotos;
     NSMutableArray *_selectedAssets;
@@ -82,9 +82,8 @@
 
 #pragma mark Click Event
 - (void)pickPhotoButtonClick:(UIButton *)sender {
-    PhotosNavigationController *navigation = [[PhotosNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
+    PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
     
-    // You can get the photos by block, the same as by delegate.
     // 你可以通过block或者代理，来得到用户选择的照片.
     [navigation setDidFinishPickingPhotosHandle:^(NSArray<UIImage *> *photos, NSArray *assets) {
         for (UIImage *image in photos) {
@@ -95,28 +94,25 @@
         }
     }];
     
-    // Set the appearance
     // 在这里设置imagePickerVc的外观
     // imagePickerVc.navigationBar.barTintColor = [UIColor greenColor];
     // imagePickerVc.oKButtonTitleColorDisabled = [UIColor lightGrayColor];
     // imagePickerVc.oKButtonTitleColorNormal = [UIColor greenColor];
     
-    // Set allow picking video & originalPhoto or not
     // 设置是否可以选择视频/原图
-    // imagePickerVc.allowPickingVideo = NO;
-    // imagePickerVc.allowPickingOriginalPhoto = NO;
+    // imagePickerVc.canPickVideo = NO;
+    // imagePickerVc.canPickOriginalPhoto = NO;
     
     [self presentViewController:navigation animated:YES completion:nil];
 }
 
 #pragma mark - 用户点击了取消
-- (void)PhotosNavigationControllerDidCancel:(PhotosNavigationController *)picker {
+- (void)navigationControllerDidCancel:(PMNavigationController *)picker {
     // NSLog(@"cancel");
 }
 
-/// User finish picking photo，if assets are not empty, user picking original photo.
 /// 用户选择好了图片，如果assets非空，则用户选择了原图。
-- (void)PhotosNavigationController:(PhotosNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets {
+- (void)navigationController:(PMNavigationController *)picker didFinishPickingPhotos:(NSArray *)photos sourceAssets:(NSArray *)assets {
     
     NSMutableArray *imageArray = [NSMutableArray array];
     for (int i = 0; i < photos.count; i++) {
@@ -130,9 +126,8 @@
     _collectionView.contentSize = CGSizeMake(0, ((_selectedPhotos.count + 2) / 3 ) * (_margin + _itemWH));
 }
 
-/// User finish picking video,
 /// 用户选择好了视频
-- (void)PhotosNavigationController:(PhotosNavigationController *)picker didFinishPickingVideo:(UIImage *)coverImage sourceAssets:(id)asset {
+- (void)navigationController:(PMNavigationController *)picker didFinishPickingVideo:(UIImage *)coverImage sourceAssets:(id)asset {
     [_selectedPhotos addObjectsFromArray:@[coverImage]];
     [_collectionView reloadData];
     _collectionView.contentSize = CGSizeMake(0, ((_selectedPhotos.count + 2) / 3 ) * (_margin + _itemWH));
