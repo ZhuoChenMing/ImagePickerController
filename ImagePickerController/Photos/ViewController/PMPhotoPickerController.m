@@ -50,8 +50,9 @@ static CGSize AssetGridThumbnailSize;
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
+    
     self.navigationItem.title = _model.name;
-    _shouldScrollToBottom = YES;
+    self.shouldScrollToBottom = YES;
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     
@@ -71,7 +72,9 @@ static CGSize AssetGridThumbnailSize;
     layout.minimumInteritemSpacing = margin;
     layout.minimumLineSpacing = margin;
     CGFloat top = margin + 44;
-    if (iOS7Later) top += 20;
+    if (iOS7Later) {
+        top += 20;
+    }
     
     self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(margin, top, CGRectGetWidth(self.view.frame) - 2 * margin, CGRectGetHeight(self.view.frame)- 50 - top) collectionViewLayout:layout];
     self.collectionView.backgroundColor = [UIColor whiteColor];
@@ -131,7 +134,7 @@ static CGSize AssetGridThumbnailSize;
 - (void)originalPhotoButtonClick {
     _toolBarView.originalPhotoButton.selected = !_toolBarView.originalPhotoButton.isSelected;
     _isSelectOriginalPhoto = _toolBarView.originalPhotoButton.isSelected;
-    _toolBarView.originalPhotoLable.hidden = !_toolBarView.originalPhotoButton.isSelected;
+    _toolBarView.originalPhotoLabel.hidden = !_toolBarView.originalPhotoButton.isSelected;
     
     if (_isSelectOriginalPhoto) {
         [self getSelectedPhotoBytes];
@@ -216,7 +219,7 @@ static CGSize AssetGridThumbnailSize;
     
     __weak typeof(cell) weakCell = cell;
     __weak typeof(self) weakSelf = self;
-    __weak typeof(_toolBarView.numberLable.layer) weakLayer = _toolBarView.numberLable.layer;
+    __weak typeof(_toolBarView.numberLabel.layer) weakLayer = _toolBarView.numberLabel.layer;
     cell.didSelectPhotoBlock = ^(BOOL isSelected) {
         // 1. cancel select / 取消选择
         if (isSelected) {
@@ -233,10 +236,10 @@ static CGSize AssetGridThumbnailSize;
                 [weakSelf.pickerModelArray addObject:model];
                 [weakSelf refreshBottomToolBarStatus];
             } else {
-                [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",navigation.maxImagesCount]];
+                [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片", navigation.maxImagesCount]];
             }
         }
-        [self showOscillatoryAnimationWithLayer:weakLayer big:NO];
+        [weakSelf showOscillatoryAnimationWithLayer:weakLayer big:NO];
     };
     return cell;
 }
@@ -289,12 +292,12 @@ static CGSize AssetGridThumbnailSize;
     _toolBarView.previewButton.enabled = self.pickerModelArray.count > 0;
     _toolBarView.okButton.enabled = self.pickerModelArray.count > 0;
     
-    _toolBarView.numberLable.hidden = self.pickerModelArray.count <= 0;
-    _toolBarView.numberLable.text = [NSString stringWithFormat:@"%zd", self.pickerModelArray.count];
+    _toolBarView.numberLabel.hidden = self.pickerModelArray.count <= 0;
+    _toolBarView.numberLabel.text = [NSString stringWithFormat:@"%zd", self.pickerModelArray.count];
     
     _toolBarView.originalPhotoButton.enabled = self.pickerModelArray.count > 0;
     _toolBarView.originalPhotoButton.selected = (_isSelectOriginalPhoto && _toolBarView.originalPhotoButton.enabled);
-    _toolBarView.originalPhotoLable.hidden = (!_toolBarView.originalPhotoButton.isSelected);
+    _toolBarView.originalPhotoLabel.hidden = (!_toolBarView.originalPhotoButton.isSelected);
     if (_isSelectOriginalPhoto) {
         [self getSelectedPhotoBytes];
     }
@@ -304,17 +307,18 @@ static CGSize AssetGridThumbnailSize;
     photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
     photoPreviewVc.selectedPhotoArray = self.pickerModelArray;
     
+    __weak typeof(self) weakSelf = self;
     photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        self.pickerModelArray = newSelectedPhotoArr;
-        self.isSelectOriginalPhoto = isSelectOriginalPhoto;
-        [self.collectionView reloadData];
-        [self refreshBottomToolBarStatus];
+        weakSelf.pickerModelArray = newSelectedPhotoArr;
+        weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
+        [weakSelf.collectionView reloadData];
+        [weakSelf refreshBottomToolBarStatus];
     };
-    photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto){
+    photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
         if (newSelectedPhotoArr.count != 0) {
-            self.pickerModelArray = newSelectedPhotoArr;
-            self.isSelectOriginalPhoto = isSelectOriginalPhoto;
-            [self okButtonClick];
+            weakSelf.pickerModelArray = newSelectedPhotoArr;
+            weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
+            [weakSelf okButtonClick];
         }
     };
     [self.navigationController pushViewController:photoPreviewVc animated:YES];
@@ -322,7 +326,7 @@ static CGSize AssetGridThumbnailSize;
 
 - (void)getSelectedPhotoBytes {
     [[PMDataManager manager] getPhotoBytesWithPhotoArray:self.pickerModelArray completion:^(NSString *totalBytes) {
-        self.toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)", totalBytes];
+        self.toolBarView.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)", totalBytes];
     }];
 }
 
@@ -353,11 +357,12 @@ static CGSize AssetGridThumbnailSize;
         NSMutableArray *addedIndexPaths = [NSMutableArray array];
         NSMutableArray *removedIndexPaths = [NSMutableArray array];
         
+        __weak typeof(self) weakSelf = self;
         [self computeDifferenceBetweenRect:self.previousPreheatRect andRect:preheatRect removedHandler:^(CGRect removedRect) {
-            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:removedRect];
+            NSArray *indexPaths = [weakSelf aapl_indexPathsForElementsInRect:removedRect];
             [removedIndexPaths addObjectsFromArray:indexPaths];
         } addedHandler:^(CGRect addedRect) {
-            NSArray *indexPaths = [self aapl_indexPathsForElementsInRect:addedRect];
+            NSArray *indexPaths = [weakSelf aapl_indexPathsForElementsInRect:addedRect];
             [addedIndexPaths addObjectsFromArray:indexPaths];
         }];
         

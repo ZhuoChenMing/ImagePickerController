@@ -35,7 +35,6 @@
 }
 
 - (void)configMoviePlayer {
-    
     [[PMDataManager manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
         self->_cover = photo;
     }];

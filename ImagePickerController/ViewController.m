@@ -38,8 +38,7 @@
     layout.minimumInteritemSpacing = _margin;
     layout.minimumLineSpacing = _margin;
     
-    
-    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(_margin, 20, CGRectGetWidth(self.view.frame) - 2 * _margin, CGRectGetHeight(self.view.frame) - 20) collectionViewLayout:layout];
+    _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(_margin, 130, CGRectGetWidth(self.view.frame) - 2 * _margin, CGRectGetHeight(self.view.frame) - 20) collectionViewLayout:layout];
     _collectionView.backgroundColor = [UIColor whiteColor];
     _collectionView.contentInset = UIEdgeInsetsMake(4, 0, 0, 2);
     _collectionView.scrollIndicatorInsets = UIEdgeInsetsMake(0, 0, 0, -2);
@@ -85,12 +84,13 @@
     PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
     
     // 你可以通过block或者代理，来得到用户选择的照片.
+    __weak typeof(self) weakSelf = self;
     [navigation setDidFinishPickingPhotosHandle:^(NSArray<UIImage *> *photos, NSArray *assets) {
         for (UIImage *image in photos) {
             //如果返回的图片还是太大 可以这样压缩
             NSData *data = UIImageJPEGRepresentation(image, 0.5);
             NSData *oriData = UIImageJPEGRepresentation(image, 1);      
-            NSLog(@"%@, %@", [self getBytesFromDataLength:data.length], [self getBytesFromDataLength:oriData.length]);
+            NSLog(@"%@, %@", [weakSelf getBytesFromDataLength:data.length], [weakSelf getBytesFromDataLength:oriData.length]);
         }
     }];
     

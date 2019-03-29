@@ -12,13 +12,13 @@
 
 @interface PMAlbumInfoModel : NSObject
 
-//相册名
+/** 相册名 */
 @property (nonatomic, strong) NSString *name;
 
-//照片个数
+/** 相册中照片个数 */
 @property (nonatomic, assign) NSInteger count;
 
-//< PHFetchResult<PHAsset> or ALAssetsGroup<ALAsset>
+/** < PHFetchResult<PHAsset> 或者 ALAssetsGroup<ALAsset> */
 @property (nonatomic, strong) id result;
 
 @end

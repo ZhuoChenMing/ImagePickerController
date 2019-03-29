@@ -32,69 +32,69 @@
         divide.frame = CGRectMake(0, 0, width, 1);
         [self addSubview:divide];
         
-        _okButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _okButton.frame = CGRectMake(width - 44 - 12, 3, 44, 44);
-        _okButton.titleLabel.font = [UIFont systemFontOfSize:16];
-        [_okButton setTitle:@"确定" forState:UIControlStateNormal];
-        [_okButton setTitle:@"确定" forState:UIControlStateDisabled];
-        [_okButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
-        [_okButton setTitleColor:navigation.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
-        _okButton.enabled = selectedPhotoArray.count > 0;
+        self.okButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.okButton.frame = CGRectMake(width - 44 - 12, 3, 44, 44);
+        self.okButton.titleLabel.font = [UIFont systemFontOfSize:16];
+        [self.okButton setTitle:@"确定" forState:UIControlStateNormal];
+        [self.okButton setTitle:@"确定" forState:UIControlStateDisabled];
+        [self.okButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
+        [self.okButton setTitleColor:navigation.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
+        self.okButton.enabled = selectedPhotoArray.count > 0;
         [self addSubview:_okButton];
         
-        _numberLable = [[UILabel alloc] init];
-        _numberLable.frame = CGRectMake(width - 56 - 24, 12, 26, 26);
-        _numberLable.layer.cornerRadius = 13.0;
-        _numberLable.clipsToBounds = YES;
-        _numberLable.font = [UIFont systemFontOfSize:16];
-        _numberLable.textColor = [UIColor whiteColor];
-        _numberLable.textAlignment = NSTextAlignmentCenter;
-        _numberLable.text = [NSString stringWithFormat:@"%zd", selectedPhotoArray.count];
-        _numberLable.hidden = selectedPhotoArray.count <= 0;
-        _numberLable.backgroundColor = navigation.oKButtonTitleColorNormal;
-        [self addSubview:_numberLable];
+        self.numberLabel = [[UILabel alloc] init];
+        self.numberLabel.frame = CGRectMake(width - 56 - 24, 12, 26, 26);
+        self.numberLabel.layer.cornerRadius = 13.0;
+        self.numberLabel.clipsToBounds = YES;
+        self.numberLabel.font = [UIFont systemFontOfSize:16];
+        self.numberLabel.textColor = [UIColor whiteColor];
+        self.numberLabel.textAlignment = NSTextAlignmentCenter;
+        self.numberLabel.text = [NSString stringWithFormat:@"%zd", selectedPhotoArray.count];
+        self.numberLabel.hidden = selectedPhotoArray.count <= 0;
+        self.numberLabel.backgroundColor = navigation.oKButtonTitleColorNormal;
+        [self addSubview:_numberLabel];
         
         if (navigation.canPickOriginalPhoto) {
-            _originalPhotoButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            _originalPhotoButton.imageEdgeInsets = UIEdgeInsetsMake(0, -8, 0, 0);
-            _originalPhotoButton.contentEdgeInsets = UIEdgeInsetsMake(0, -45, 0, 0);
-            _originalPhotoButton.titleLabel.font = [UIFont systemFontOfSize:16];
-            [_originalPhotoButton setTitle:@"原图" forState:UIControlStateNormal];
-            [_originalPhotoButton setTitle:@"原图" forState:UIControlStateSelected];
-            [_originalPhotoButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
-            [_originalPhotoButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateSelected];
-            [_originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_def"] forState:UIControlStateNormal];
-            [_originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_sel"] forState:UIControlStateSelected];
+            self.originalPhotoButton = [UIButton buttonWithType:UIButtonTypeCustom];
+            self.originalPhotoButton.imageEdgeInsets = UIEdgeInsetsMake(0, -8, 0, 0);
+            self.originalPhotoButton.contentEdgeInsets = UIEdgeInsetsMake(0, -45, 0, 0);
+            self.originalPhotoButton.titleLabel.font = [UIFont systemFontOfSize:16];
+            [self.originalPhotoButton setTitle:@"原图" forState:UIControlStateNormal];
+            [self.originalPhotoButton setTitle:@"原图" forState:UIControlStateSelected];
+            [self.originalPhotoButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+            [self.originalPhotoButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateSelected];
+            [self.originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_def"] forState:UIControlStateNormal];
+            [self.originalPhotoButton setImage:[UIImage imageNamed:@"photo_original_sel"] forState:UIControlStateSelected];
             
-            _originalPhotoLable = [[UILabel alloc] init];
-            _originalPhotoLable.frame = CGRectMake(70, 0, 60, 50);
-            _originalPhotoLable.textAlignment = NSTextAlignmentLeft;
-            _originalPhotoLable.font = [UIFont systemFontOfSize:16];
-            _originalPhotoLable.textColor = navigation.oKButtonTitleColorNormal;
+            self.originalPhotoLabel = [[UILabel alloc] init];
+            self.originalPhotoLabel.frame = CGRectMake(70, 0, 60, 50);
+            self.originalPhotoLabel.textAlignment = NSTextAlignmentLeft;
+            self.originalPhotoLabel.font = [UIFont systemFontOfSize:16];
+            self.originalPhotoLabel.textColor = navigation.oKButtonTitleColorNormal;
             if (isHave) {
                 [[PMDataManager manager] getPhotoBytesWithPhotoArray:photoArray completion:^(NSString *totalBytes) {
-                    self.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+                    self.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)",totalBytes];
                 }];
             }
-            [_originalPhotoButton addSubview:_originalPhotoLable];
+            [self.originalPhotoButton addSubview:_originalPhotoLabel];
             [self addSubview:_originalPhotoButton];
         }
         
         if (isHave) {
-            _originalPhotoButton.frame = CGRectMake(60, 0, 130, 50);
-            _originalPhotoButton.enabled = selectedPhotoArray.count > 0;
+            self.originalPhotoButton.frame = CGRectMake(60, 0, 130, 50);
+            self.originalPhotoButton.enabled = selectedPhotoArray.count > 0;
             
-            _previewButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            _previewButton.frame = CGRectMake(10, 3, 44, 44);
-            _previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
-            [_previewButton setTitle:@"预览" forState:UIControlStateNormal];
-            [_previewButton setTitle:@"预览" forState:UIControlStateDisabled];
-            [_previewButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
-            [_previewButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
-            _previewButton.enabled = NO;
+            self.previewButton = [UIButton buttonWithType:UIButtonTypeCustom];
+            self.previewButton.frame = CGRectMake(10, 3, 44, 44);
+            self.previewButton.titleLabel.font = [UIFont systemFontOfSize:16];
+            [self.previewButton setTitle:@"预览" forState:UIControlStateNormal];
+            [self.previewButton setTitle:@"预览" forState:UIControlStateDisabled];
+            [self.previewButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
+            [self.previewButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+            self.previewButton.enabled = NO;
             [self addSubview:_previewButton];
         } else {
-            _originalPhotoButton.frame = CGRectMake(10, 0, 130, 50);
+            self.originalPhotoButton.frame = CGRectMake(10, 0, 130, 50);
         }
     }
     return self;

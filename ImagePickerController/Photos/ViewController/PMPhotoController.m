@@ -39,15 +39,19 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
     
     //标题栏
-    self.selectButton = [[UIButton alloc] initWithFrame:CGRectMake(100, 0, 42, 42)];
+    self.selectButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 30, 42)];
     [self.selectButton setImage:[UIImage imageNamed:@"photo_def_photoPickerVc"] forState:UIControlStateNormal];
     [self.selectButton setImage:[UIImage imageNamed:@"photo_sel_photoPickerVc"] forState:UIControlStateSelected];
     [self.selectButton addTarget:self action:@selector(select:) forControlEvents:UIControlEventTouchUpInside];
     
     UIBarButtonItem *rightBarButton = [[UIBarButtonItem alloc] initWithCustomView:_selectButton];
-    self.navigationItem.rightBarButtonItem = rightBarButton;
+    
+    UIBarButtonItem *spaceItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    spaceItem.width = -15;
+    self.navigationItem.rightBarButtonItems = @[spaceItem, rightBarButton];
     
     //照片预览网格
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
@@ -55,7 +59,7 @@
     layout.itemSize = CGSizeMake(CGRectGetWidth(self.view.frame), CGRectGetHeight(self.view.frame));
     layout.minimumInteritemSpacing = 0;
     layout.minimumLineSpacing = 0;
-    
+
     self.collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.view.frame), CGRectGetHeight(self.view.frame)) collectionViewLayout:layout];
     self.collectionView.backgroundColor = [UIColor blackColor];
     self.collectionView.dataSource = self;
@@ -65,9 +69,8 @@
     self.collectionView.showsHorizontalScrollIndicator = NO;
     self.collectionView.contentOffset = CGPointMake(0, 0);
     self.collectionView.contentSize = CGSizeMake(CGRectGetWidth(self.view.frame) * _photoArray.count, CGRectGetHeight(self.view.frame));
-    [self.view addSubview:_collectionView];
-    
     [self.collectionView registerClass:[PMPhotoPreviewCell class] forCellWithReuseIdentifier:@"PMPhotoPreviewCell"];
+    [self.view addSubview:_collectionView];
     
     //底部工具栏
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
@@ -85,6 +88,12 @@
     }
     
     [self refreshNaviBarAndBottomBarState];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    if (self.returnNewSelectedPhotoArrBlock) { self.returnNewSelectedPhotoArrBlock(_selectedPhotoArray, _isSelectOriginalPhoto);
+    }
 }
 
 #pragma mark - 点击事件
@@ -112,7 +121,7 @@
     if (model.isSelected) {
         [self showOscillatoryAnimationWithLayer:selectButton.imageView.layer type:0];
     }
-    [self showOscillatoryAnimationWithLayer:_toolBarView.numberLable.layer type:1];
+    [self showOscillatoryAnimationWithLayer:_toolBarView.numberLabel.layer type:1];
 }
 
 - (void)showOscillatoryAnimationWithLayer:(CALayer *)layer type:(BOOL)type {
@@ -132,13 +141,6 @@
     }];
 }
 
-- (void)back {
-    [self.navigationController popViewControllerAnimated:YES];
-    if (self.returnNewSelectedPhotoArrBlock) {
-        self.returnNewSelectedPhotoArrBlock(self.selectedPhotoArray,_isSelectOriginalPhoto);
-    }
-}
-
 - (void)okButtonClick {
     if (self.okButtonClickBlock) {
         self.okButtonClickBlock(self.selectedPhotoArray, _isSelectOriginalPhoto);
@@ -148,7 +150,7 @@
 - (void)originalPhotoButtonClick {
     _toolBarView.originalPhotoButton.selected = !_toolBarView.originalPhotoButton.isSelected;
     _isSelectOriginalPhoto = _toolBarView.originalPhotoButton.isSelected;
-    _toolBarView.originalPhotoLable.hidden = !_toolBarView.originalPhotoButton.isSelected;
+    _toolBarView.originalPhotoLabel.hidden = !_toolBarView.originalPhotoButton.isSelected;
     if (_isSelectOriginalPhoto) {
         [self showPhotoBytes];
         if (!_selectButton.isSelected) {
@@ -176,7 +178,7 @@
     PMPhotoPreviewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"PMPhotoPreviewCell" forIndexPath:indexPath];
     cell.model = _photoArray[indexPath.row];
     
-    __weak PMPhotoController *weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     cell.singleTapGestureBlock = ^() {
         weakSelf.isHideNaviBar = !weakSelf.isHideNaviBar;
         
@@ -198,7 +200,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         if (iOS9Later) {
-            [self prefersStatusBarHidden];
+            [weakSelf prefersStatusBarHidden];
         } else {
             [[UIApplication sharedApplication] setStatusBarHidden:weakSelf.isHideNaviBar withAnimation:UIStatusBarAnimationSlide];
         }
@@ -212,11 +214,11 @@
 - (void)refreshNaviBarAndBottomBarState {
     PMPhotoInfoModel *model = _photoArray[_currentIndex];
     _selectButton.selected = model.isSelected;
-    _toolBarView.numberLable.text = [NSString stringWithFormat:@"%zd",_selectedPhotoArray.count];
-    _toolBarView.numberLable.hidden = (_selectedPhotoArray.count <= 0 || _isHideNaviBar);
+    _toolBarView.numberLabel.text = [NSString stringWithFormat:@"%zd",_selectedPhotoArray.count];
+    _toolBarView.numberLabel.hidden = (_selectedPhotoArray.count <= 0 || _isHideNaviBar);
     
     _toolBarView.originalPhotoButton.selected = _isSelectOriginalPhoto;
-    _toolBarView.originalPhotoLable.hidden = !_toolBarView.originalPhotoButton.isSelected;
+    _toolBarView.originalPhotoLabel.hidden = !_toolBarView.originalPhotoButton.isSelected;
     if (_isSelectOriginalPhoto) {
         [self showPhotoBytes];
     }
@@ -229,18 +231,18 @@
     }
     if (model.type == PMPhotoTypeVideo) {
         _toolBarView.originalPhotoButton.hidden = YES;
-        _toolBarView.originalPhotoLable.hidden = YES;
+        _toolBarView.originalPhotoLabel.hidden = YES;
     } else {
         _toolBarView.originalPhotoButton.hidden = NO;
         if (_isSelectOriginalPhoto) {
-            _toolBarView.originalPhotoLable.hidden = NO;
+            _toolBarView.originalPhotoLabel.hidden = NO;
         }
     }
 }
 
 - (void)showPhotoBytes {
     [[PMDataManager manager] getPhotoBytesWithPhotoArray:@[_photoArray[_currentIndex]] completion:^(NSString *totalBytes) {
-        self.toolBarView.originalPhotoLable.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+        self.toolBarView.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)",totalBytes];
     }];
 }
 

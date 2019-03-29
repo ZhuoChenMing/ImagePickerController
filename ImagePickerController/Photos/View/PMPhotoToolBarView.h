@@ -20,11 +20,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) UIButton *okButton;
 
-@property (nonatomic, strong) UILabel *numberLable;
+@property (nonatomic, strong) UILabel *numberLabel;
 
 @property (nonatomic, strong) UIButton *originalPhotoButton;
 
-@property (nonatomic, strong) UILabel *originalPhotoLable;
+@property (nonatomic, strong) UILabel *originalPhotoLabel;
 
 - (instancetype)initWithNavigation:(PMNavigationController *)navigation
                 selectedPhotoArray:(NSArray *)selectedPhotoArray

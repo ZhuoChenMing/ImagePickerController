@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-static const CGFloat AlbumListCellHeight = 70.0;
+static const CGFloat kAlbumListCellHeight = 70.0;
 
 @class PMAlbumInfoModel;
 

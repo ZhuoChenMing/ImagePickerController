@@ -14,18 +14,19 @@
 
 @interface PMPhotoInfoModel : NSObject
 
-@property (nonatomic, strong) id asset;             ///< PHAsset or ALAsset
-
+/** PHAsset或者ALAsset */
+@property (nonatomic, strong) id asset;
 
 /** 是否选择了该照片 */
 @property (nonatomic, assign) BOOL isSelected;
 
-
+/** 照片类型 */
 @property (nonatomic, assign) PMPhotoType type;
 
+/** 影音时长 */
 @property (nonatomic, copy) NSString *timeLength;
 
-//初始化照片模型
+/** 初始化照片模型 */
 + (instancetype)modelWithAsset:(id)asset type:(PMPhotoType)type;
 
 + (instancetype)modelWithAsset:(id)asset type:(PMPhotoType)type timeLength:(NSString *)timeLength;

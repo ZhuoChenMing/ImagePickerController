@@ -89,7 +89,7 @@
 }
 
 - (void)getAllAlbums:(BOOL)canPickVideo completion:(void (^)(NSArray<PMAlbumInfoModel *> *))completion {
-    NSMutableArray *albumArr = [NSMutableArray array];
+    NSMutableArray *albumArray = [NSMutableArray array];
     if (iOS8Later) {
         PHFetchOptions *option = [[PHFetchOptions alloc] init];
         if (!canPickVideo) option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
@@ -106,11 +106,13 @@
             if (fetchResult.count < 1) {
                 continue;
             }
-            if ([collection.localizedTitle containsString:@"Deleted"] || [collection.localizedTitle isEqualToString:@"最近删除"]) continue;
+            if ([collection.localizedTitle containsString:@"Deleted"] || [collection.localizedTitle isEqualToString:@"最近删除"]) {
+                continue;
+            }
             if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"]) {
-                [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:0];
+                [albumArray insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:0];
             } else {
-                [albumArr addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
+                [albumArray addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
             }
         }
         
@@ -121,27 +123,27 @@
                 continue;
             }
             if ([collection.localizedTitle isEqualToString:@"My Photo Stream"] || [collection.localizedTitle isEqualToString:@"我的照片流"]) {
-                [albumArr insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:1];
+                [albumArray insertObject:[self modelWithResult:fetchResult name:collection.localizedTitle] atIndex:1];
             } else {
-                [albumArr addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
+                [albumArray addObject:[self modelWithResult:fetchResult name:collection.localizedTitle]];
             }
         }
-        if (completion && albumArr.count > 0) completion(albumArr);
+        if (completion && albumArray.count > 0) completion(albumArray);
     } else {
         [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
             if (group == nil) {
-                if (completion && albumArr.count > 0) completion(albumArr);
+                if (completion && albumArray.count > 0) completion(albumArray);
             }
             if ([group numberOfAssets] < 1) {
                 return;
             }
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
             if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
-                [albumArr insertObject:[self modelWithResult:group name:name] atIndex:0];
+                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:0];
             } else if ([name isEqualToString:@"My Photo Stream"] || [name isEqualToString:@"我的照片流"]) {
-                [albumArr insertObject:[self modelWithResult:group name:name] atIndex:1];
+                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:1];
             } else {
-                [albumArr addObject:[self modelWithResult:group name:name]];
+                [albumArray addObject:[self modelWithResult:group name:name]];
             }
         } failureBlock:nil];
     }
@@ -149,7 +151,7 @@
 
 #pragma mark - 获得照片数组
 - (void)getAssetsFromFetchResult:(id)result canPickVideo:(BOOL)canPickVideo completion:(void (^)(NSArray<PMPhotoInfoModel *> *))completion {
-    NSMutableArray *photoArr = [NSMutableArray array];
+    NSMutableArray *photoArray = [NSMutableArray array];
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
         [fetchResult enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -169,10 +171,10 @@
             }
             NSString *timeLength = type == PMPhotoTypeVideo ? [NSString stringWithFormat:@"%0.0f", asset.duration] : @"";
             timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
-            [photoArr addObject:[PMPhotoInfoModel modelWithAsset:asset type:type timeLength:timeLength]];
+            [photoArray addObject:[PMPhotoInfoModel modelWithAsset:asset type:type timeLength:timeLength]];
         }];
         if (completion) {
-            completion(photoArr);
+            completion(photoArray);
         }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
@@ -180,12 +182,12 @@
         [gruop enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
             if (result == nil) {
                 if (completion) {
-                    completion(photoArr);
+                    completion(photoArray);
                 }
             }
             PMPhotoType type = PMPhotoTypePhoto;
             if (!canPickVideo){
-                [photoArr addObject:[PMPhotoInfoModel modelWithAsset:result type:type]];
+                [photoArray addObject:[PMPhotoInfoModel modelWithAsset:result type:type]];
                 return;
             }
             /// Allow picking video
@@ -194,9 +196,9 @@
                 NSTimeInterval duration = [[result valueForProperty:ALAssetPropertyDuration] integerValue];
                 NSString *timeLength = [NSString stringWithFormat:@"%0.0f",duration];
                 timeLength = [self getNewTimeFromDurationSecond:timeLength.integerValue];
-                [photoArr addObject:[PMPhotoInfoModel modelWithAsset:result type:type timeLength:timeLength]];
+                [photoArray addObject:[PMPhotoInfoModel modelWithAsset:result type:type timeLength:timeLength]];
             } else {
-                [photoArr addObject:[PMPhotoInfoModel modelWithAsset:result type:type]];
+                [photoArray addObject:[PMPhotoInfoModel modelWithAsset:result type:type]];
             }
         }];
     }
