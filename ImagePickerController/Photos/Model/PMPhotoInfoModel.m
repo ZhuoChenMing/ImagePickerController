@@ -10,7 +10,7 @@
 
 @implementation PMPhotoInfoModel
 
-+ (instancetype)modelWithAsset:(id)asset type:(PMPhotoType)type{
++ (instancetype)modelWithAsset:(id)asset type:(PMPhotoType)type {
     PMPhotoInfoModel *model = [[PMPhotoInfoModel alloc] init];
     model.asset = asset;
     model.isSelected = NO;

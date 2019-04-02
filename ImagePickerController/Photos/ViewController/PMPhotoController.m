@@ -102,8 +102,8 @@
     if (!selectButton.isSelected) {
         // 1. 选择照片,检查是否超过了最大个数的限制
         PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
-        if (self.selectedPhotoArray.count >= navigation.maxImagesCount) {
-            [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",navigation.maxImagesCount]];
+        if (self.selectedPhotoArray.count >= navigation.maxImageCount) {
+            [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片",navigation.maxImageCount]];
             return;
             // 2. 如果没有超过最大个数限制
         } else {

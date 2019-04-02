@@ -26,10 +26,10 @@
 
 @implementation PMNavigationController
 
-- (instancetype)initWithMaxImagesCount:(NSInteger)maxImagesCount delegate:(id<PMNavigationControllerDelegate>)delegate {
+- (instancetype)initWithMaxImageCount:(NSInteger)maxImageCount delegate:(id<PMNavigationControllerDelegate>)delegate {
     PMAlbumViewController *viewController = [[PMAlbumViewController alloc] init];
     if (self = [super initWithRootViewController:viewController]) {
-        self.maxImagesCount = maxImagesCount > 0 ? maxImagesCount : 9; // Default is 9 / 默认最大可选9张图片
+        self.maxImageCount = maxImageCount > 0 ? maxImageCount : 9; // Default is 9 / 默认最大可选9张图片
         self.pickerDelegate = delegate;
         
         // 默认准许用户选择原图和视频, 你也可以在这个方法后置为NO
@@ -176,7 +176,6 @@
         [_HUDIndicatorView stopAnimating];
         [_progressHUD removeFromSuperview];
     }
-    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {

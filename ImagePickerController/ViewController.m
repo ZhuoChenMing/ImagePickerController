@@ -25,12 +25,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
+    
+    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithTitle:@"清理" style:UIBarButtonItemStylePlain target:self action:@selector(cleanAllPhoto)];
+    self.navigationItem.rightBarButtonItem = barButton;
+    
     _selectedPhotos = [NSMutableArray array];
     _selectedAssets = [NSMutableArray array];
-    [self configCollectionView];
-}
-
-- (void)configCollectionView {
+    
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     _margin = 10;
     _itemWH = (CGRectGetWidth(self.view.frame) - 2 * _margin - 4) / 3 - _margin;
@@ -46,6 +47,11 @@
     _collectionView.delegate = self;
     [self.view addSubview:_collectionView];
     [_collectionView registerClass:[AddCollectionViewCell class] forCellWithReuseIdentifier:@"AddCollectionViewCell"];
+}
+
+- (void)cleanAllPhoto {
+    [_selectedPhotos removeAllObjects];
+    [_collectionView reloadData];
 }
 
 #pragma mark - UICollectionView
@@ -81,7 +87,7 @@
 
 #pragma mark Click Event
 - (void)pickPhotoButtonClick:(UIButton *)sender {
-    PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImagesCount:9 delegate:self];
+    PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImageCount:9 delegate:self];
     
     // 你可以通过block或者代理，来得到用户选择的照片.
     __weak typeof(self) weakSelf = self;

@@ -26,26 +26,7 @@
     self.view.backgroundColor = [UIColor whiteColor];
     self.navigationItem.title = @"照片";
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
-    [self configTableView];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    if (_albumArray) {
-        return;
-    }
-    [self configTableView];
-}
-
-- (void)configTableView {
-    PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
-    [[PMDataManager manager] getAllAlbums:navigation.canPickVideo completion:^(NSArray<PMAlbumInfoModel *> *models) {
-        self.albumArray = [NSMutableArray arrayWithArray:models];
-        [self createTableView];
-    }];
-}
-
-- (void)createTableView {
+    
     CGFloat top = 44;
     if (iOS7Later) {
         top += 20;
@@ -57,9 +38,17 @@
     self.tableView.delegate = self;
     [self.tableView registerClass:[PMTableViewCell class] forCellReuseIdentifier:@"ListCell"];
     [self.view addSubview:_tableView];
+
+    PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
+    [navigation showProgressHUD];
+    [[PMDataManager manager] getAllAlbums:navigation.canPickVideo completion:^(NSArray<PMAlbumInfoModel *> *models) {
+        self.albumArray = [NSMutableArray arrayWithArray:models];
+        [self.tableView reloadData];
+        [navigation hideProgressHUD];
+    }];
 }
 
-#pragma mark - Click Event
+#pragma mark - 取消按钮点击事件
 - (void)cancel {
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;

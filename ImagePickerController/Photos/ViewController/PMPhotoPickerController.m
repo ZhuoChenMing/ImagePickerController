@@ -36,7 +36,7 @@
 
 @end
 
-static CGSize AssetGridThumbnailSize;
+static CGSize kAssetGridThumbnailSize;
 
 @implementation PMPhotoPickerController
 
@@ -50,21 +50,10 @@ static CGSize AssetGridThumbnailSize;
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     self.navigationItem.title = _model.name;
     self.shouldScrollToBottom = YES;
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
-    
-    PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
-    [[PMDataManager manager] getAssetsFromFetchResult:_model.result canPickVideo:navigation.canPickVideo completion:^(NSArray<PMPhotoInfoModel *> *models) {
-        self.photoArray = [NSMutableArray arrayWithArray:models];
-        [self createPickerView];
-    }];
-    [self resetCachedAssets];
-}
-
-- (void)createPickerView {
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     CGFloat margin = 4;
     CGFloat itemWH = (CGRectGetWidth(self.view.frame) - 2 * margin - 4) / 4 - margin;
@@ -98,19 +87,27 @@ static CGSize AssetGridThumbnailSize;
     [self.toolBarView.okButton addTarget:self action:@selector(okButtonClick) forControlEvents:UIControlEventTouchUpInside];
     
     [self.view addSubview:_toolBarView];
+    
+    [navigation showProgressHUD];
+    [[PMDataManager manager] getAssetsFromFetchResult:_model.result canPickVideo:navigation.canPickVideo completion:^(NSArray<PMPhotoInfoModel *> *models) {
+        self.photoArray = [NSMutableArray arrayWithArray:models];
+        [self.collectionView reloadData];
+        [navigation hideProgressHUD];
+    }];
+    [self resetCachedAssets];
 }
 
 #pragma mark - 视图将要出现 消失
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     if (_shouldScrollToBottom && _photoArray.count > 0) {
-        [_collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:(_photoArray.count - 1) inSection:0] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
-        _shouldScrollToBottom = NO;
+        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:(_photoArray.count - 1) inSection:0] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+        self.shouldScrollToBottom = NO;
     }
-    // Determine the size of the thumbnails to request from the PHCachingImageManager
+    
     CGFloat scale = [UIScreen mainScreen].scale;
     CGSize cellSize = ((UICollectionViewFlowLayout *)_collectionView.collectionViewLayout).itemSize;
-    AssetGridThumbnailSize = CGSizeMake(cellSize.width * scale, cellSize.height * scale);
+    kAssetGridThumbnailSize = CGSizeMake(cellSize.width * scale, cellSize.height * scale);
 }
 
 #pragma mark - 点击事件
@@ -132,9 +129,9 @@ static CGSize AssetGridThumbnailSize;
 }
 
 - (void)originalPhotoButtonClick {
-    _toolBarView.originalPhotoButton.selected = !_toolBarView.originalPhotoButton.isSelected;
-    _isSelectOriginalPhoto = _toolBarView.originalPhotoButton.isSelected;
-    _toolBarView.originalPhotoLabel.hidden = !_toolBarView.originalPhotoButton.isSelected;
+    self.toolBarView.originalPhotoButton.selected = !_toolBarView.originalPhotoButton.isSelected;
+    self.isSelectOriginalPhoto = _toolBarView.originalPhotoButton.isSelected;
+    self.toolBarView.originalPhotoLabel.hidden = !_toolBarView.originalPhotoButton.isSelected;
     
     if (_isSelectOriginalPhoto) {
         [self getSelectedPhotoBytes];
@@ -145,69 +142,46 @@ static CGSize AssetGridThumbnailSize;
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
     [navigation showProgressHUD];
     
-    __block NSMutableArray *photos = [NSMutableArray array];
-    __block NSMutableArray *assets = [NSMutableArray array];
-    __block NSMutableArray *infoArr = [NSMutableArray array];
-    __block NSMutableArray *indexArray = [NSMutableArray array];
-    __block NSInteger loopCount = 0;
+    NSMutableArray *photoArray = [NSMutableArray array];
+    NSMutableArray *assetArray = [NSMutableArray array];
+    NSMutableArray *infoArray = [NSMutableArray array];
     
-    for (NSInteger i = 0; i < self.pickerModelArray.count; i++) {
-        PMPhotoInfoModel *model = self.pickerModelArray[i];
-        [[PMDataManager manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-            if (isDegraded) {
-                return;
-            }
-            if (photo) {
-                if (self.isSelectOriginalPhoto) {
-                    [photos addObject:photo];
-                    [assets addObject:model.asset];
-                } else {
-                    NSData *decData = UIImageJPEGRepresentation(photo, 0.5);
-                    UIImage *thumbImage = [UIImage imageWithData:decData];
-                    [photos addObject:thumbImage];
-                    [assets removeAllObjects];
-                }
-            }
+    for (NSInteger i = 0; i < _pickerModelArray.count; i++) {
+        PMPhotoInfoModel *model = _pickerModelArray[i];
+        if (model.image) {
+            [assetArray addObject:model.asset];
             
-            if (info) {
-                [infoArr addObject:info];
+            if (self.isSelectOriginalPhoto) {
+                [photoArray addObject:model.image];
+            } else {
+                NSData *decData = UIImageJPEGRepresentation(model.image, 0.5);
+                UIImage *thumbImage = [UIImage imageWithData:decData];
+                [photoArray addObject:thumbImage];
             }
-            [indexArray addObject:[NSString stringWithFormat:@"%ld", i]];
-            loopCount++;
-            if (loopCount == self.pickerModelArray.count) {
-                for (int m = 0; m < indexArray.count - 1; m++) {
-                    for (int n = m + 1; n < indexArray.count; n++) {
-                        if (indexArray[m] > indexArray[n]) {
-                            UIImage *temImage = photos[n];
-                            photos[n] = photos[m];
-                            photos[m] = temImage;
-                            
-                            NSString *str = indexArray[n];
-                            indexArray[n] = indexArray[m];
-                            indexArray[m] = str;
-                        }
-                    }
-                }
-                if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:)]) {
-                    [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets];
-                    [photos removeAllObjects];
-                }
-                if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
-                    [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photos sourceAssets:assets infos:infoArr];
-                }
-                if (navigation.didFinishPickingPhotosHandle) {
-                    navigation.didFinishPickingPhotosHandle(photos, assets);
-                }
-                if (navigation.didFinishPickingPhotosWithInfosHandle) {
-                    navigation.didFinishPickingPhotosWithInfosHandle(photos, assets, infoArr);
-                }
-                [navigation hideProgressHUD];
+            if (model.info) {
+                [infoArray addObject:model.info];
+            } else {
+                [infoArray addObject:@{}];
             }
-        }];
+        }
     }
+    if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:)]) {
+        [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray];
+    }
+    if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
+        [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray infos:infoArray];
+    }
+    if (navigation.didFinishPickingPhotosHandle) {
+        navigation.didFinishPickingPhotosHandle(photoArray, assetArray);
+    }
+    if (navigation.didFinishPickingPhotosWithInfosHandle) {
+        navigation.didFinishPickingPhotosWithInfosHandle(photoArray, assetArray, infoArray);
+    }
+    [navigation hideProgressHUD];
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
-#pragma mark - UICollectionViewDataSource && Delegate
+#pragma mark - UICollection代理
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     return _photoArray.count;
 }
@@ -221,22 +195,34 @@ static CGSize AssetGridThumbnailSize;
     __weak typeof(self) weakSelf = self;
     __weak typeof(_toolBarView.numberLabel.layer) weakLayer = _toolBarView.numberLabel.layer;
     cell.didSelectPhotoBlock = ^(BOOL isSelected) {
-        // 1. cancel select / 取消选择
+        //取消选择
         if (isSelected) {
             weakCell.selectPhotoButton.selected = NO;
             model.isSelected = NO;
             [weakSelf.pickerModelArray removeObject:model];
             [weakSelf refreshBottomToolBarStatus];
         } else {
-            // 2. select:check if over the maxImagesCount / 选择照片,检查是否超过了最大个数的限制
+            //选择照片,检查是否超过了最大个数的限制
             PMNavigationController *navigation = (PMNavigationController *)weakSelf.navigationController;
-            if (weakSelf.pickerModelArray.count < navigation.maxImagesCount) {
+            if (weakSelf.pickerModelArray.count < navigation.maxImageCount) {
                 weakCell.selectPhotoButton.selected = YES;
                 model.isSelected = YES;
+                
+                //获取照片原图及照片信息
+                [[PMDataManager manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+                    if (isDegraded) {
+                        return;
+                    }
+                    model.image = photo;
+                    if (info) {
+                        model.info = [NSDictionary dictionaryWithDictionary:info];
+                    }
+                }];
+                
                 [weakSelf.pickerModelArray addObject:model];
                 [weakSelf refreshBottomToolBarStatus];
             } else {
-                [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片", navigation.maxImagesCount]];
+                [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片", navigation.maxImageCount]];
             }
         }
         [weakSelf showOscillatoryAnimationWithLayer:weakLayer big:NO];
@@ -278,13 +264,6 @@ static CGSize AssetGridThumbnailSize;
         photoPreviewVc.currentIndex = indexPath.row;
         [self pushPhotoPrevireViewController:photoPreviewVc];
     }
-}
-
-#pragma mark - UIScrollViewDelegate
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-//    if (iOS8Later) {
-        // [self updateCachedAssets];
-//    }
 }
 
 #pragma mark - Private Method
@@ -370,8 +349,8 @@ static CGSize AssetGridThumbnailSize;
         NSArray *assetsToStopCaching = [self assetsAtIndexPaths:removedIndexPaths];
         
         // Update the assets the PHCachingImageManager is caching.
-        [[PMDataManager manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
-        [[PMDataManager manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:AssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[PMDataManager manager].cachingImageManager startCachingImagesForAssets:assetsToStartCaching targetSize:kAssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
+        [[PMDataManager manager].cachingImageManager stopCachingImagesForAssets:assetsToStopCaching targetSize:kAssetGridThumbnailSize contentMode:PHImageContentModeAspectFill options:nil];
         
         // Store the preheat rect to compare against in the future.
         self.previousPreheatRect = preheatRect;

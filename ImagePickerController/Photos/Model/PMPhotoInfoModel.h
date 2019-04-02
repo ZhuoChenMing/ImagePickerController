@@ -20,6 +20,12 @@
 /** 是否选择了该照片 */
 @property (nonatomic, assign) BOOL isSelected;
 
+/** 照片或者视频的封面 */
+@property (nonatomic, strong) UIImage *image;
+
+/** 照片或者视频的信息字典 */
+@property (nonatomic, strong) NSDictionary *info;
+
 /** 照片类型 */
 @property (nonatomic, assign) PMPhotoType type;
 
