@@ -107,6 +107,16 @@
             return;
             // 2. 如果没有超过最大个数限制
         } else {
+            //获取照片原图及照片信息
+            [[PMDataManager manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+                if (isDegraded) {
+                    return;
+                }
+                model.image = photo;
+                if (info) {
+                    model.info = [NSDictionary dictionaryWithDictionary:info];
+                }
+            }];
             [self.selectedPhotoArray addObject:model];
             if (model.type == PMPhotoTypeVideo) {
                 PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
