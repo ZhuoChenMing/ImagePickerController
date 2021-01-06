@@ -64,9 +64,10 @@
     _model = model;
     [self.scrollView setZoomScale:1.0 animated:NO];
     
+    __weak typeof(self) weakSelf = self;
     [[PMDataManager manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-        self.photoImageView.image = photo;
-        [self autoLayoutPhotoImageView];
+        weakSelf.photoImageView.image = photo;
+        [weakSelf autoLayoutPhotoImageView];
     }];
 }
 

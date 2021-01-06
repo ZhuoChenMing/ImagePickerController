@@ -18,45 +18,37 @@
 
 @property (nonatomic, strong) PHCachingImageManager *cachingImageManager;
 
+/// 系统版本
+@property (nonatomic, assign, readonly) CGFloat systemVersion;
+
+/// 是否是刘海屏
+@property (nonatomic, assign, readonly) BOOL notchScreen;
+/// 刘海屏的下边距
+@property (nonatomic, assign, readonly) CGFloat notchBottom;
+
+/// 是否可以选择视频
+@property (nonatomic, assign) BOOL canPickVideo;
+
 + (instancetype)manager;
 
-//返回YES如果得到了授权
+/// 返回YES如果得到了授权
 - (BOOL)authorizationStatusAuthorized;
+/// 获取授权
+- (void)getAuthorization:(void(^)(BOOL authorized))callback;
 
-/**
- 获取相机拍摄的照片列表数组
-
- @param canPickVideo 是否可以选择视频
- @param completion 回调相册数组
- */
-- (void)getCameraRollAlbum:(BOOL)canPickVideo completion:(void (^)(PMAlbumInfoModel *model))completion;
-
-/**
- 获取相册列表数组
-
- @param canPickVideo 是否可以选择视频
- @param completion 回调相册数组
- */
-- (void)getAllAlbums:(BOOL)canPickVideo completion:(void (^)(NSArray<PMAlbumInfoModel *> *models))completion;
-
-/**
- 获取相册列表的封面
- 
- @param model 相册模型
- @param completion 返回相册封面
- */
-- (void)getAlbumCoverWithModel:(PMAlbumInfoModel *)model completion:(void (^)(UIImage *coverImabe))completion;
+/// 只获取相机拍摄的照片列表
+- (void)getCameraRollAlbum:(void (^)(PMAlbumInfoModel *model))completion;
+/// 获取相册列表数组
+- (void)getAlbums:(void (^)(NSArray<PMAlbumInfoModel *> *models))completion;
 
 /**
  获取相册列表中的照片详情数组
 
  @param result < PHFetchResult<PHAsset> or ALAssetsGroup<ALAsset>
- @param canPickVideo 是否可以选择视频
  @param completion 回调照片详情数组
  */
-- (void)getAssetsFromFetchResult:(id)result canPickVideo:(BOOL)canPickVideo completion:(void (^)(NSArray<PMPhotoInfoModel *> *models))completion;
-
-- (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index canPickVideo:(BOOL)canPickVideo completion:(void (^)(PMPhotoInfoModel *model))completion;
+- (void)getAssetsFromFetchResult:(id)result completion:(void (^)(NSArray<PMPhotoInfoModel *> *models))completion;
+- (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index completion:(void (^)(PMPhotoInfoModel *model))completion;
 
 /**
  根据数据源获取适配屏幕宽度的图片及图片信息
@@ -89,9 +81,9 @@
 /**
  获得一组照片的总大小
 
- @param photoArray 照片数组
+ @param models 模型数组
  @param completion 回调计算的大小
  */
-- (void)getPhotoBytesWithPhotoArray:(NSArray *)photoArray completion:(void (^)(NSString *totalBytes))completion;
+- (void)getPhotoBytesWithModels:(NSArray <PMPhotoInfoModel *>*)models completion:(void (^)(NSString *totalBytes))completion;
 
 @end

@@ -28,7 +28,7 @@
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
     
     CGFloat top = 44;
-    if (iOS7Later) {
+    if ([PMDataManager manager].systemVersion >= 7) {
         top += 20;
     }
     self.tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, top, CGRectGetWidth(self.view.frame), CGRectGetHeight(self.view.frame) - top) style:UITableViewStylePlain];
@@ -38,12 +38,16 @@
     self.tableView.delegate = self;
     [self.tableView registerClass:[PMTableViewCell class] forCellReuseIdentifier:@"ListCell"];
     [self.view addSubview:_tableView];
+}
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
     [navigation showProgressHUD];
-    [[PMDataManager manager] getAllAlbums:navigation.canPickVideo completion:^(NSArray<PMAlbumInfoModel *> *models) {
-        self.albumArray = [NSMutableArray arrayWithArray:models];
-        [self.tableView reloadData];
+    __weak typeof(self) weakSelf = self;
+    [[PMDataManager manager] getAlbums:^(NSArray<PMAlbumInfoModel *> *models) {
+        weakSelf.albumArray = [NSMutableArray arrayWithArray:models];
+        [weakSelf.tableView reloadData];
         [navigation hideProgressHUD];
     }];
 }

@@ -39,9 +39,7 @@
     NSAttributedString *countString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"  (%zd)", model.count] attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:16], NSForegroundColorAttributeName:[UIColor lightGrayColor]}];
     [nameString appendAttributedString:countString];
     self.nameLabel.attributedText = nameString;
-    [[PMDataManager manager] getAlbumCoverWithModel:model completion:^(UIImage *coverImabe) {
-        self.albumImageView.image = coverImabe;
-    }];
+    self.albumImageView.image = model.coverImage;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

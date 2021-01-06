@@ -14,15 +14,16 @@
 #import "PMAlbumViewController.h"
 #import "PMPhotoController.h"
 
-@interface PMVideoPlayerController () {
-    AVPlayer *_player;
-    UIButton *_playButton;
-    UIImage *_cover;
+@interface PMVideoPlayerController ()
+
+@property (nonatomic, strong) AVPlayer *player;
+@property (nonatomic, strong) UIButton *playButton;
+@property (nonatomic, strong) UIImage *cover;
     
-    UIView *_toolBar;
-    UIButton *_okButton;
-    UIProgressView *_progress;
-}
+@property (nonatomic, strong) UIView *toolBar;
+@property (nonatomic, strong) UIButton *okButton;
+@property (nonatomic, strong) UIProgressView *progress;
+
 @end
 
 @implementation PMVideoPlayerController
@@ -35,19 +36,20 @@
 }
 
 - (void)configMoviePlayer {
+    __weak typeof(self) weakSelf = self;
     [[PMDataManager manager] getPhotoWithAsset:_model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-        self->_cover = photo;
+        weakSelf.cover = photo;
     }];
     [[PMDataManager manager] getVideoWithAsset:_model.asset completion:^(AVPlayerItem *playerItem, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self->_player = [AVPlayer playerWithPlayerItem:playerItem];
-            AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:self->_player];
-            playerLayer.frame = self.view.bounds;
-            [self.view.layer addSublayer:playerLayer];
-            [self addProgressObserver];
-            [self configPlayButton];
-            [self configBottomToolBar];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pausePlayerAndShowNaviBar) name:AVPlayerItemDidPlayToEndTimeNotification object:self->_player.currentItem];
+            weakSelf.player = [AVPlayer playerWithPlayerItem:playerItem];
+            AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:weakSelf.player];
+            playerLayer.frame = weakSelf.view.bounds;
+            [weakSelf.view.layer addSublayer:playerLayer];
+            [weakSelf addProgressObserver];
+            [weakSelf configPlayButton];
+            [weakSelf configBottomToolBar];
+            [[NSNotificationCenter defaultCenter] addObserver:weakSelf selector:@selector(pausePlayerAndShowNaviBar) name:AVPlayerItemDidPlayToEndTimeNotification object:weakSelf.player.currentItem];
         });
     }];
 }
@@ -104,7 +106,7 @@
         [self.navigationController setNavigationBarHidden:YES];
         _toolBar.hidden = YES;
         [_playButton setImage:nil forState:UIControlStateNormal];
-        if (iOS7Later) {
+        if ([PMDataManager manager].systemVersion >= 7) {
             [UIApplication sharedApplication].statusBarHidden = YES;
         }
     } else {
@@ -129,7 +131,9 @@
     _toolBar.hidden = NO;
     [self.navigationController setNavigationBarHidden:NO];
     [_playButton setImage:[UIImage imageNamed:@"MMVideoPreviewPlay"] forState:UIControlStateNormal];
-    if (iOS7Later) [UIApplication sharedApplication].statusBarHidden = NO;
+    if ([PMDataManager manager].systemVersion >= 7) {
+        [UIApplication sharedApplication].statusBarHidden = NO;
+    }
 }
 
 - (void)dealloc {

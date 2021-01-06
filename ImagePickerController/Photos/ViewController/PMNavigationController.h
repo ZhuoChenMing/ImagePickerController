@@ -29,19 +29,21 @@
 
 @interface PMNavigationController : UINavigationController
 
-//初始化方法
+/// 初始化照片选择器
+/// @param maxImageCount 最多可以选择多少张照片（0可全选）
+/// @param delegate 代理
 - (instancetype)initWithMaxImageCount:(NSInteger)maxImageCount delegate:(id<PMNavigationControllerDelegate>)delegate;
 
-//默认最大可选9张图片
-@property (nonatomic, assign) NSInteger maxImageCount;
+/// 最多可以选择多少张照片
+@property (nonatomic, assign, readonly) NSInteger maxImageCount;
 
-//默认为YES，如果设置为NO,原图按钮将隐藏，用户不能选择发送原图
+/// 默认为YES，如果设置为NO,原图按钮将隐藏，用户不能选择发送原图
 @property (nonatomic, assign) BOOL canPickOriginalPhoto;
 
-//默认为YES，如果设置为NO,用户将不能选择发送视频
+/// 默认为YES，如果设置为NO,用户将不能选择发送视频
 @property (nonatomic, assign) BOOL canPickVideo;
 
-//外观颜色
+/// 外观颜色
 @property (nonatomic, strong) UIColor *oKButtonTitleColorNormal;
 @property (nonatomic, strong) UIColor *oKButtonTitleColorDisabled;
 
@@ -59,8 +61,8 @@
 
 - (void)showAlertWithTitle:(NSString *)title;
 
+/// 加载进度框
 - (void)showProgressHUD;
-
 - (void)hideProgressHUD;
 
 @end

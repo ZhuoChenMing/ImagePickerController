@@ -9,9 +9,10 @@
 #import "PMDataManager.h"
 //AssetsLibrary框架用于访问所有相片
 #import <AssetsLibrary/AssetsLibrary.h>
-#import "PMPhotoInfoModel.h"
-#import "PMAlbumInfoModel.h"
 #import "PMAlbumViewController.h"
+
+#import "PMAlbumInfoModel.h"
+#import "PMPhotoInfoModel.h"
 
 @interface PMDataManager ()
 
@@ -33,6 +34,23 @@
     return manager;
 }
 
+- (instancetype)init {
+    if (self = [super init]) {
+        _systemVersion = [UIDevice currentDevice].systemVersion.floatValue;
+        
+        if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+            _notchScreen = NO;
+        } else {
+            if (@available(iOS 11.0, *)) {
+                UIWindow *window = [[UIApplication sharedApplication].windows firstObject];
+                _notchBottom = window.safeAreaInsets.bottom;
+                _notchScreen = _notchBottom > 0;
+            }
+        }
+    }
+    return self;
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (ALAssetsLibrary *)assetLibrary {
@@ -42,38 +60,48 @@
     return _assetLibrary;
 }
 
-#pragma mark - 返回YES如果得到了授权
+#pragma mark -  授权
 - (BOOL)authorizationStatusAuthorized {
-    if (iOS8Later) {
-        if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) {
+    if (_systemVersion < 8) {
+        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
             return YES;
         }
     } else {
-        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+        if ([PHPhotoLibrary authorizationStatus] == PHAuthorizationStatusAuthorized) {
             return YES;
         }
     }
     return NO;
 }
 
-#pragma mark - 获得相册/相册数组
-- (void)getCameraRollAlbum:(BOOL)canPickVideo completion:(void (^)(PMAlbumInfoModel *))completion {
-    __block PMAlbumInfoModel *model;
-    if (iOS8Later) {
-        PHFetchOptions *option = [[PHFetchOptions alloc] init];
-        if (!canPickVideo) option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
-        option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
-        
-        PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
-        for (PHAssetCollection *collection in smartAlbums) {
-            if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"]) {
-                PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
-                model = [self modelWithResult:fetchResult name:collection.localizedTitle];
-                if (completion) completion(model);
-                break;
+- (void)getAuthorization:(void(^)(BOOL authorized))callback {
+    if (_systemVersion < 8) {
+        if (callback) {
+            if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+                callback(YES);
+            } else {
+                callback(NO);
             }
         }
     } else {
+        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (callback) {
+                    if (status == PHAuthorizationStatusAuthorized) {
+                        callback(YES);
+                    } else {
+                        callback(NO);
+                    }
+                }
+            });
+        }];
+    }
+}
+
+#pragma mark - 获得相册/相册数组
+- (void)getCameraRollAlbum:(void (^)(PMAlbumInfoModel *))completion {
+    __block PMAlbumInfoModel *model;
+    if (_systemVersion < 8) {
         [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
             if ([group numberOfAssets] < 1) return;
             NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
@@ -85,18 +113,54 @@
                 *stop = YES;
             }
         } failureBlock:nil];
+    } else {
+        PHFetchOptions *option = [[PHFetchOptions alloc] init];
+        if (!_canPickVideo) {
+            option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
+        }
+        option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
+        
+        PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil];
+        for (PHAssetCollection *collection in smartAlbums) {
+            if ([collection.localizedTitle isEqualToString:@"Camera Roll"] || [collection.localizedTitle isEqualToString:@"相机胶卷"]) {
+                PHFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:option];
+                model = [self modelWithResult:fetchResult name:collection.localizedTitle];
+                if (completion) completion(model);
+                break;
+            }
+        }
     }
 }
 
-- (void)getAllAlbums:(BOOL)canPickVideo completion:(void (^)(NSArray<PMAlbumInfoModel *> *))completion {
+- (void)getAlbums:(void (^)(NSArray<PMAlbumInfoModel *> *))completion {
     NSMutableArray *albumArray = [NSMutableArray array];
-    if (iOS8Later) {
+    
+    if (_systemVersion < 8) {
+        [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
+            if (group == nil) {
+                if (completion && albumArray.count > 0) completion(albumArray);
+            }
+            if ([group numberOfAssets] < 1) {
+                return;
+            }
+            NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
+            if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
+                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:0];
+            } else if ([name isEqualToString:@"My Photo Stream"] || [name isEqualToString:@"我的照片流"]) {
+                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:1];
+            } else {
+                [albumArray addObject:[self modelWithResult:group name:name]];
+            }
+        } failureBlock:nil];
+    } else {
         PHFetchOptions *option = [[PHFetchOptions alloc] init];
-        if (!canPickVideo) option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
+        if (!_canPickVideo) {
+            option.predicate = [NSPredicate predicateWithFormat:@"mediaType == %ld", PHAssetMediaTypeImage];
+        }
         option.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
         
         PHAssetCollectionSubtype smartAlbumSubtype = PHAssetCollectionSubtypeSmartAlbumUserLibrary | PHAssetCollectionSubtypeSmartAlbumRecentlyAdded | PHAssetCollectionSubtypeSmartAlbumVideos;
-        if (iOS9Later) {
+        if (_systemVersion >= 9) {
             smartAlbumSubtype = PHAssetCollectionSubtypeSmartAlbumUserLibrary | PHAssetCollectionSubtypeSmartAlbumRecentlyAdded | PHAssetCollectionSubtypeSmartAlbumScreenshots | PHAssetCollectionSubtypeSmartAlbumSelfPortraits | PHAssetCollectionSubtypeSmartAlbumVideos;
         }
         PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:smartAlbumSubtype options:nil];
@@ -128,28 +192,13 @@
             }
         }
         if (completion && albumArray.count > 0) completion(albumArray);
-    } else {
-        [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
-            if (group == nil) {
-                if (completion && albumArray.count > 0) completion(albumArray);
-            }
-            if ([group numberOfAssets] < 1) {
-                return;
-            }
-            NSString *name = [group valueForProperty:ALAssetsGroupPropertyName];
-            if ([name isEqualToString:@"Camera Roll"] || [name isEqualToString:@"相机胶卷"]) {
-                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:0];
-            } else if ([name isEqualToString:@"My Photo Stream"] || [name isEqualToString:@"我的照片流"]) {
-                [albumArray insertObject:[self modelWithResult:group name:name] atIndex:1];
-            } else {
-                [albumArray addObject:[self modelWithResult:group name:name]];
-            }
-        } failureBlock:nil];
     }
 }
 
 #pragma mark - 获得照片数组
-- (void)getAssetsFromFetchResult:(id)result canPickVideo:(BOOL)canPickVideo completion:(void (^)(NSArray<PMPhotoInfoModel *> *))completion {
+- (void)getAssetsFromFetchResult:(id)result completion:(void (^)(NSArray<PMPhotoInfoModel *> *))completion {
+    CGFloat systemVersion = _systemVersion;
+    BOOL canPickVideo = _canPickVideo;
     NSMutableArray *photoArray = [NSMutableArray array];
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
@@ -161,8 +210,10 @@
             } else if (asset.mediaType == PHAssetMediaTypeAudio) {
                 type = PMPhotoTypeAudio;
             } else if (asset.mediaType == PHAssetMediaTypeImage) {
-                if (iOS9_1Later) {
+                if (systemVersion >= 9.1) {
                     // if (asset.mediaSubtypes == PHAssetMediaSubtypePhotoLive) type = AlbumModelMediaTypeLivePhoto;
+                } else {
+                    
                 }
             }
             if (!canPickVideo && type == PMPhotoTypeVideo) {
@@ -177,7 +228,9 @@
         }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
-        if (!canPickVideo) [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
+        if (!_canPickVideo) {
+            [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
+        }
         [gruop enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
             if (result == nil) {
                 if (completion) {
@@ -204,7 +257,7 @@
 }
 
 #pragma mark - 获得下标为index的单个照片
-- (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index canPickVideo:(BOOL)canPickVideo completion:(void (^)(PMPhotoInfoModel *))completion {
+- (void)getAssetFromFetchResult:(id)result atIndex:(NSInteger)index completion:(void (^)(PMPhotoInfoModel *))completion {
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
         PHAsset *asset = fetchResult[index];
@@ -215,8 +268,10 @@
         } else if (asset.mediaType == PHAssetMediaTypeAudio) {
             type = PMPhotoTypeAudio;
         } else if (asset.mediaType == PHAssetMediaTypeImage) {
-            if (iOS9_1Later) {
+            if (_systemVersion >= 9.1) {
                 // if (asset.mediaSubtypes == PHAssetMediaSubtypePhotoLive) type = AlbumModelMediaTypeLivePhoto;
+            } else {
+                
             }
         }
         NSString *timeLength = type == PMPhotoTypeVideo ? [NSString stringWithFormat:@"%0.0f", asset.duration] : @"";
@@ -227,14 +282,15 @@
         }
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
-        if (!canPickVideo) {
+        if (!_canPickVideo) {
             [gruop setAssetsFilter:[ALAssetsFilter allPhotos]];
         }
+        BOOL canPickVideo = _canPickVideo;
         NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:index];
         [gruop enumerateAssetsAtIndexes:indexSet options:NSEnumerationConcurrent usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
             PMPhotoInfoModel *model;
             PMPhotoType type = PMPhotoTypePhoto;
-            if (!canPickVideo){
+            if (!canPickVideo) {
                 model = [PMPhotoInfoModel modelWithAsset:result type:type];
                 if (completion) {
                     completion(model);
@@ -277,22 +333,6 @@
 }
 
 #pragma mark - 获得照片
-- (void)getAlbumCoverWithModel:(PMAlbumInfoModel *)model completion:(void (^)(UIImage *coverImabe))completion {
-    if (iOS8Later) {
-        [[PMDataManager manager] getPhotoWithAsset:[model.result lastObject] photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-            if (completion) {
-                completion(photo);
-            }
-        }];
-    } else {
-        ALAssetsGroup *gruop = model.result;
-        UIImage *postImage = [UIImage imageWithCGImage:gruop.posterImage];
-        if (completion) {
-            completion(postImage);
-        }
-    }
-}
-
 - (void)getPhotoWithAsset:(id)asset completion:(void (^)(UIImage *, NSDictionary *, BOOL isDegraded))completion {
     [self getPhotoWithAsset:asset photoWidth:[UIScreen mainScreen].bounds.size.width completion:completion];
 }
@@ -441,16 +481,16 @@
     }
 }
 
-- (void)getPhotoBytesWithPhotoArray:(NSArray *)photoArray completion:(void (^)(NSString *totalBytes))completion {
+- (void)getPhotoBytesWithModels:(NSArray <PMPhotoInfoModel *>*)models completion:(void (^)(NSString *totalBytes))completion {
     __block NSInteger dataLength = 0;
-    [photoArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        PMPhotoInfoModel *model = photoArray[idx];
+    [models enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        PMPhotoInfoModel *model = models[idx];
         if ([model.asset isKindOfClass:[PHAsset class]]) {
             [[PHImageManager defaultManager] requestImageDataForAsset:model.asset options:nil resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
                 if (model.type != PMPhotoTypeVideo) {
                     dataLength += imageData.length;
                 }
-                if (idx >= photoArray.count - 1) {
+                if (idx >= models.count - 1) {
                     NSString *bytes = [self getBytesFromDataLength:dataLength];
                     if (completion) {
                         completion(bytes);
@@ -462,7 +502,7 @@
             if (model.type != PMPhotoTypeVideo) {
                 dataLength += (NSInteger)representation.size;
             }
-            if (idx >= photoArray.count - 1) {
+            if (idx >= models.count - 1) {
                 NSString *bytes = [self getBytesFromDataLength:dataLength];
                 if (completion) {
                     completion(bytes);
@@ -492,16 +532,22 @@
     if ([result isKindOfClass:[PHFetchResult class]]) {
         PHFetchResult *fetchResult = (PHFetchResult *)result;
         model.count = fetchResult.count;
+        [[PMDataManager manager] getPhotoWithAsset:[model.result lastObject] photoWidth:80 completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+            model.coverImage = photo;
+        }];   
     } else if ([result isKindOfClass:[ALAssetsGroup class]]) {
         ALAssetsGroup *gruop = (ALAssetsGroup *)result;
         model.count = [gruop numberOfAssets];
+        model.coverImage = [UIImage imageWithCGImage:gruop.posterImage];
     }
     return model;
 }
 #pragma clang diagnostic pop
 
 - (NSString *)getAlbumName:(NSString *)name {
-    if (iOS8Later) {
+    if (_systemVersion < 8) {
+        return name;
+    } else {
         NSString *newName;
         if ([name containsString:@"Roll"]) {
             newName = @"相机胶卷";
@@ -519,8 +565,6 @@
             newName = name;
         }
         return newName;
-    } else {
-        return name;
     }
 }
 

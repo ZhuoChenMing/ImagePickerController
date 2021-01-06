@@ -28,6 +28,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
     self.view.backgroundColor = [UIColor whiteColor];
     
     UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithTitle:@"清理" style:UIBarButtonItemStylePlain target:self action:@selector(cleanAllPhoto)];
@@ -92,17 +93,19 @@
 
 #pragma mark Click Event
 - (void)pickPhotoButtonClick:(UIButton *)sender {
-    PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImageCount:9 delegate:self];
-    
+    PMNavigationController *navigation = [[PMNavigationController alloc] initWithMaxImageCount:0 delegate:self];
+    dispatch_queue_t queue = dispatch_queue_create("chuan", DISPATCH_QUEUE_SERIAL);
     // 你可以通过block或者代理，来得到用户选择的照片.
     __weak typeof(self) weakSelf = self;
     [navigation setDidFinishPickingPhotosHandle:^(NSArray<UIImage *> *photos, NSArray *assets) {
-        for (UIImage *image in photos) {
-            //如果返回的图片还是太大 可以这样压缩
-            NSData *data = UIImageJPEGRepresentation(image, 0.5);
-            NSData *oriData = UIImageJPEGRepresentation(image, 1);
-            NSLog(@"%@, %@", [weakSelf getBytesFromDataLength:data.length], [weakSelf getBytesFromDataLength:oriData.length]);
-        }
+        dispatch_async(queue, ^{
+            for (UIImage *image in photos) {
+                //如果返回的图片还是太大 可以这样压缩
+                NSData *data = UIImageJPEGRepresentation(image, 0.5);
+                NSData *oriData = UIImageJPEGRepresentation(image, 1);
+                NSLog(@"%@, %@", [weakSelf getBytesFromDataLength:data.length], [weakSelf getBytesFromDataLength:oriData.length]);
+            }
+        });
     }];
     
     // 在这里设置imagePickerVc的外观
@@ -113,7 +116,7 @@
     // 设置是否可以选择视频/原图
     // imagePickerVc.canPickVideo = NO;
     // imagePickerVc.canPickOriginalPhoto = NO;
-    
+    navigation.modalPresentationStyle = 0;
     [self presentViewController:navigation animated:YES completion:nil];
 }
 

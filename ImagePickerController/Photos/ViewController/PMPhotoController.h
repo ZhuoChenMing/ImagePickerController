@@ -9,13 +9,15 @@
 #import <UIKit/UIKit.h>
 #import "PMNavigationController.h"
 
+@class PMPhotoInfoModel;
+
 @interface PMPhotoController : UIViewController
 
 //所有图片的数组
-@property (nonatomic, strong) NSArray *photoArray;
+@property (nonatomic, strong) NSArray <PMPhotoInfoModel *>*models;
 
 //当前选中的图片数组
-@property (nonatomic, strong) NSMutableArray *selectedPhotoArray;
+@property (nonatomic, strong) NSMutableArray <PMPhotoInfoModel *>*selectedModels;
 
 //用户点击的图片的索引
 @property (nonatomic, assign) NSInteger currentIndex;

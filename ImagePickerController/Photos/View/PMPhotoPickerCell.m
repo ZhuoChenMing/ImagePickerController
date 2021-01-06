@@ -31,8 +31,9 @@
 
 - (void)setModel:(PMPhotoInfoModel *)model {
     _model = model;
+    __weak typeof(self) weakSelf = self;
     [[PMDataManager manager] getPhotoWithAsset:model.asset photoWidth:CGRectGetWidth(self.frame) completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
-        self.imageView.image = photo;
+        weakSelf.imageView.image = photo;
     }];
     self.selectPhotoButton.selected = model.isSelected;
     self.selectImageView.image = self.selectPhotoButton.isSelected ? [UIImage imageNamed:@"photo_sel_photoPickerVc"] : [UIImage imageNamed:@"photo_def_photoPickerVc"];

@@ -10,11 +10,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class PMNavigationController;
+@class PMNavigationController, PMPhotoInfoModel;
 
 @interface PMPhotoToolBarView : UIView
-
-@property (nonatomic, assign) BOOL isHavePreviewButton;
 
 @property (nonatomic, strong) UIButton *previewButton;
 
@@ -26,10 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) UILabel *originalPhotoLabel;
 
-- (instancetype)initWithNavigation:(PMNavigationController *)navigation
-                selectedPhotoArray:(NSArray *)selectedPhotoArray
-                        photoArray:(NSArray *)photoArray
-          isHavePreviewPhotoButton:(BOOL)isHave;
+/// 初始化相片选择器
+/// @param navigation 获取 PMNavigationController 的配置信息
+/// @param selectedModels 选择的相片
+/// @param models 全部的相片
+/// @param previewPhoto 是否使用预览按钮
+- (instancetype)initWithNavigation:(PMNavigationController *)navigation selectedModels:(NSArray <PMPhotoInfoModel *>*)selectedModels models:(NSArray <PMPhotoInfoModel *>*)models  previewPhoto:(BOOL)previewPhoto;
 
 @end
 

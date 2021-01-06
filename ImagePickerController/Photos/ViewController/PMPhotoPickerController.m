@@ -23,14 +23,14 @@
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 
-@property (nonatomic, strong) NSMutableArray *photoArray;
+@property (nonatomic, strong) NSMutableArray <PMPhotoInfoModel *>*models;
+@property (nonatomic, strong) NSMutableArray <PMPhotoInfoModel *>*pickerModels;
 
 @property (nonatomic, strong) PMPhotoToolBarView *toolBarView;
+@property (nonatomic, strong) UIBarButtonItem *rightItem;
 
 @property (nonatomic, assign) BOOL isSelectOriginalPhoto;
 @property (nonatomic, assign) BOOL shouldScrollToBottom;
-
-@property (nonatomic, strong) NSMutableArray *pickerModelArray;
 
 @property (nonatomic, assign) CGRect previousPreheatRect;
 
@@ -40,19 +40,21 @@ static CGSize kAssetGridThumbnailSize;
 
 @implementation PMPhotoPickerController
 
-- (NSMutableArray *)pickerModelArray {
-    if (_pickerModelArray == nil) {
-        _pickerModelArray = [NSMutableArray array];
-    }
-    return _pickerModelArray;
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancel)];
+    
+    PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
+    if (navigation.maxImageCount == NSIntegerMax) {
+        self.rightItem = [[UIBarButtonItem alloc] initWithTitle:@"全选" style:UIBarButtonItemStylePlain target:self action:@selector(chooseAllPhotos:)];
+        self.navigationItem.rightBarButtonItem = _rightItem;
+    } else {
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancleNavigation)];
+    }
+    
     self.navigationItem.title = _model.name;
     self.shouldScrollToBottom = YES;
+    self.pickerModels = [NSMutableArray array];
     
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     CGFloat margin = 4;
@@ -61,7 +63,7 @@ static CGSize kAssetGridThumbnailSize;
     layout.minimumInteritemSpacing = margin;
     layout.minimumLineSpacing = margin;
     CGFloat top = margin + 44;
-    if (iOS7Later) {
+    if ([PMDataManager manager].systemVersion >= 7) {
         top += 20;
     }
     
@@ -70,7 +72,7 @@ static CGSize kAssetGridThumbnailSize;
     self.collectionView.dataSource = self;
     self.collectionView.delegate = self;
     self.collectionView.alwaysBounceHorizontal = NO;
-    if (iOS7Later) {
+    if ([PMDataManager manager].systemVersion >= 7) {
         self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 2);
     }
     self.collectionView.scrollIndicatorInsets = UIEdgeInsetsMake(0, 0, 0, -2);
@@ -79,8 +81,7 @@ static CGSize kAssetGridThumbnailSize;
     [self.view addSubview:_collectionView];
     
     //工具栏
-    PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
-    self.toolBarView = [[PMPhotoToolBarView alloc] initWithNavigation:navigation selectedPhotoArray:self.pickerModelArray photoArray:self.pickerModelArray isHavePreviewPhotoButton:YES];
+    self.toolBarView = [[PMPhotoToolBarView alloc] initWithNavigation:navigation selectedModels:_pickerModels models:_pickerModels previewPhoto:YES];
     
     [self.toolBarView.previewButton addTarget:self action:@selector(previewButtonClick) forControlEvents:UIControlEventTouchUpInside];
     [self.toolBarView.originalPhotoButton addTarget:self action:@selector(originalPhotoButtonClick) forControlEvents:UIControlEventTouchUpInside];
@@ -89,9 +90,10 @@ static CGSize kAssetGridThumbnailSize;
     [self.view addSubview:_toolBarView];
     
     [navigation showProgressHUD];
-    [[PMDataManager manager] getAssetsFromFetchResult:_model.result canPickVideo:navigation.canPickVideo completion:^(NSArray<PMPhotoInfoModel *> *models) {
-        self.photoArray = [NSMutableArray arrayWithArray:models];
-        [self.collectionView reloadData];
+    __weak typeof(self) weakSelf = self;
+    [[PMDataManager manager] getAssetsFromFetchResult:_model.result completion:^(NSArray<PMPhotoInfoModel *> *models) {
+        weakSelf.models = [NSMutableArray arrayWithArray:models];
+        [weakSelf.collectionView reloadData];
         [navigation hideProgressHUD];
     }];
     [self resetCachedAssets];
@@ -100,8 +102,8 @@ static CGSize kAssetGridThumbnailSize;
 #pragma mark - 视图将要出现 消失
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    if (_shouldScrollToBottom && _photoArray.count > 0) {
-        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:(_photoArray.count - 1) inSection:0] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    if (_shouldScrollToBottom && _models.count > 0) {
+        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:(_models.count - 1) inSection:0] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
         self.shouldScrollToBottom = NO;
     }
     
@@ -111,8 +113,47 @@ static CGSize kAssetGridThumbnailSize;
 }
 
 #pragma mark - 点击事件
-- (void)cancel {
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+- (void)chooseAllPhotos:(UIBarButtonItem *)item {
+    [self.pickerModels removeAllObjects];
+    if ([item.title isEqualToString:@"全选"]) {
+        item.title = @"取消";
+        PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
+        [navigation showProgressHUD];
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            for (NSInteger i = 0; i < self.models.count; i++) {
+                PMPhotoInfoModel *model = self.models[i];
+                model.isSelected = YES;
+                
+                //获取照片原图及照片信息
+                [[PMDataManager manager] getPhotoWithAsset:model.asset completion:^(UIImage *photo, NSDictionary *info, BOOL isDegraded) {
+                    if (isDegraded) {
+                        return;
+                    }
+                    model.image = photo;
+                    if (info) {
+                        model.info = [NSDictionary dictionaryWithDictionary:info];
+                    }
+                }];
+            }
+            [self.pickerModels addObjectsFromArray:self.models];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [navigation hideProgressHUD];
+                [self.collectionView reloadData];
+                [self refreshBottomToolBarStatus];
+            });
+        });
+    } else {
+        item.title = @"全选";
+        for (NSInteger i = 0; i < _models.count; i++) {
+            PMPhotoInfoModel *model = _models[i];
+            model.isSelected = NO;
+        }
+        [self.collectionView reloadData];
+        [self refreshBottomToolBarStatus];
+    }
+}
+- (void)cancleNavigation {
+    [self.navigationController popViewControllerAnimated:YES];
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
     if ([navigation.pickerDelegate respondsToSelector:@selector(navigationControllerDidCancel:)]) {
         [navigation.pickerDelegate navigationControllerDidCancel:navigation];
@@ -123,9 +164,9 @@ static CGSize kAssetGridThumbnailSize;
 }
 
 - (void)previewButtonClick {
-    PMPhotoController *photoPreviewVc = [[PMPhotoController alloc] init];
-    photoPreviewVc.photoArray = [NSArray arrayWithArray:self.pickerModelArray];
-    [self pushPhotoPrevireViewController:photoPreviewVc];
+    PMPhotoController *photoPreviewVC = [[PMPhotoController alloc] init];
+    photoPreviewVC.models = [NSArray arrayWithArray:_pickerModels];
+    [self pushPhotoPrevireViewController:photoPreviewVC];
 }
 
 - (void)originalPhotoButtonClick {
@@ -142,69 +183,73 @@ static CGSize kAssetGridThumbnailSize;
     PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
     [navigation showProgressHUD];
     
-    NSMutableArray *photoArray = [NSMutableArray array];
-    NSMutableArray *assetArray = [NSMutableArray array];
-    NSMutableArray *infoArray = [NSMutableArray array];
-    
-    for (NSInteger i = 0; i < _pickerModelArray.count; i++) {
-        PMPhotoInfoModel *model = _pickerModelArray[i];
-        if (model.image) {
-            [assetArray addObject:model.asset];
-            
-            if (self.isSelectOriginalPhoto) {
-                [photoArray addObject:model.image];
-            } else {
-                NSData *decData = UIImageJPEGRepresentation(model.image, 0.5);
-                UIImage *thumbImage = [UIImage imageWithData:decData];
-                [photoArray addObject:thumbImage];
-            }
-            if (model.info) {
-                [infoArray addObject:model.info];
-            } else {
-                [infoArray addObject:@{}];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        NSMutableArray *photoArray = [NSMutableArray array];
+        NSMutableArray *assetArray = [NSMutableArray array];
+        NSMutableArray *infoArray = [NSMutableArray array];
+        
+        for (NSInteger i = 0; i < self.pickerModels.count; i++) {
+            PMPhotoInfoModel *model = self.pickerModels[i];
+            if (model.image) {
+                [assetArray addObject:model.asset];
+                
+                if (self.isSelectOriginalPhoto) {
+                    [photoArray addObject:model.image];
+                } else {
+                    NSData *decData = UIImageJPEGRepresentation(model.image, 0.5);
+                    UIImage *thumbImage = [UIImage imageWithData:decData];
+                    [photoArray addObject:thumbImage];
+                }
+                if (model.info) {
+                    [infoArray addObject:model.info];
+                } else {
+                    [infoArray addObject:@{}];
+                }
             }
         }
-    }
-    if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:)]) {
-        [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray];
-    }
-    if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
-        [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray infos:infoArray];
-    }
-    if (navigation.didFinishPickingPhotosHandle) {
-        navigation.didFinishPickingPhotosHandle(photoArray, assetArray);
-    }
-    if (navigation.didFinishPickingPhotosWithInfosHandle) {
-        navigation.didFinishPickingPhotosWithInfosHandle(photoArray, assetArray, infoArray);
-    }
-    [navigation hideProgressHUD];
-    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:)]) {
+                [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray];
+            }
+            if ([navigation.pickerDelegate respondsToSelector:@selector(navigationController:didFinishPickingPhotos:sourceAssets:infos:)]) {
+                [navigation.pickerDelegate navigationController:navigation didFinishPickingPhotos:photoArray sourceAssets:assetArray infos:infoArray];
+            }
+            if (navigation.didFinishPickingPhotosHandle) {
+                navigation.didFinishPickingPhotosHandle(photoArray, assetArray);
+            }
+            if (navigation.didFinishPickingPhotosWithInfosHandle) {
+                navigation.didFinishPickingPhotosWithInfosHandle(photoArray, assetArray, infoArray);
+            }
+            [navigation hideProgressHUD];
+            [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+        });
+    });
 }
 
 #pragma mark - UICollection代理
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return _photoArray.count;
+    return _models.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     PMPhotoPickerCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"PMPhotoPickerCell" forIndexPath:indexPath];
-    PMPhotoInfoModel *model = _photoArray[indexPath.row];
+    PMPhotoInfoModel *model = _models[indexPath.row];
     cell.model = model;
     
     __weak typeof(cell) weakCell = cell;
     __weak typeof(self) weakSelf = self;
     __weak typeof(_toolBarView.numberLabel.layer) weakLayer = _toolBarView.numberLabel.layer;
     cell.didSelectPhotoBlock = ^(BOOL isSelected) {
+        PMNavigationController *navigation = (PMNavigationController *)weakSelf.navigationController;
         //取消选择
         if (isSelected) {
             weakCell.selectPhotoButton.selected = NO;
             model.isSelected = NO;
-            [weakSelf.pickerModelArray removeObject:model];
+            [weakSelf.pickerModels removeObject:model];
             [weakSelf refreshBottomToolBarStatus];
         } else {
             //选择照片,检查是否超过了最大个数的限制
-            PMNavigationController *navigation = (PMNavigationController *)weakSelf.navigationController;
-            if (weakSelf.pickerModelArray.count < navigation.maxImageCount) {
+            if (weakSelf.pickerModels.count < navigation.maxImageCount) {
                 weakCell.selectPhotoButton.selected = YES;
                 model.isSelected = YES;
                 
@@ -219,12 +264,21 @@ static CGSize kAssetGridThumbnailSize;
                     }
                 }];
                 
-                [weakSelf.pickerModelArray addObject:model];
+                [weakSelf.pickerModels addObject:model];
                 [weakSelf refreshBottomToolBarStatus];
             } else {
                 [navigation showAlertWithTitle:[NSString stringWithFormat:@"你最多只能选择%zd张照片", navigation.maxImageCount]];
             }
         }
+        
+        if (navigation.maxImageCount == NSIntegerMax) {
+            if (weakSelf.pickerModels.count == weakSelf.models.count) {
+                weakSelf.rightItem.title = @"取消";
+            } else {
+                weakSelf.rightItem.title = @"全选";
+            }
+        }
+
         [weakSelf showOscillatoryAnimationWithLayer:weakLayer big:NO];
     };
     return cell;
@@ -248,64 +302,66 @@ static CGSize kAssetGridThumbnailSize;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    PMPhotoInfoModel *model = _photoArray[indexPath.row];
+    PMPhotoInfoModel *model = _models[indexPath.row];
     if (model.type == PMPhotoTypeVideo) {
-        if (self.pickerModelArray.count > 0) {
+        if (_pickerModels.count > 0) {
             PMNavigationController *navigation = (PMNavigationController *)self.navigationController;
             [navigation showAlertWithTitle:@"选择照片时不能选择视频"];
         } else {
-            PMVideoPlayerController *videoPlayerVc = [[PMVideoPlayerController alloc] init];
-            videoPlayerVc.model = model;
-            [self.navigationController pushViewController:videoPlayerVc animated:YES];
+            PMVideoPlayerController *videoPlayerVC = [[PMVideoPlayerController alloc] init];
+            videoPlayerVC.model = model;
+            [self.navigationController pushViewController:videoPlayerVC animated:YES];
         }
     } else {
-        PMPhotoController *photoPreviewVc = [[PMPhotoController alloc] init];
-        photoPreviewVc.photoArray = _photoArray;
-        photoPreviewVc.currentIndex = indexPath.row;
-        [self pushPhotoPrevireViewController:photoPreviewVc];
+        PMPhotoController *photoPreviewVC = [[PMPhotoController alloc] init];
+        photoPreviewVC.models = _models;
+        photoPreviewVC.currentIndex = indexPath.row;
+        [self pushPhotoPrevireViewController:photoPreviewVC];
     }
 }
 
 #pragma mark - Private Method
 - (void)refreshBottomToolBarStatus {
-    _toolBarView.previewButton.enabled = self.pickerModelArray.count > 0;
-    _toolBarView.okButton.enabled = self.pickerModelArray.count > 0;
+    NSInteger count = _pickerModels.count;
+    self.toolBarView.previewButton.enabled = count > 0;
+    self.toolBarView.okButton.enabled = count > 0;
     
-    _toolBarView.numberLabel.hidden = self.pickerModelArray.count <= 0;
-    _toolBarView.numberLabel.text = [NSString stringWithFormat:@"%zd", self.pickerModelArray.count];
+    self.toolBarView.numberLabel.hidden = count <= 0;
+    self.toolBarView.numberLabel.text = [NSString stringWithFormat:@"%zd", count];
     
-    _toolBarView.originalPhotoButton.enabled = self.pickerModelArray.count > 0;
-    _toolBarView.originalPhotoButton.selected = (_isSelectOriginalPhoto && _toolBarView.originalPhotoButton.enabled);
-    _toolBarView.originalPhotoLabel.hidden = (!_toolBarView.originalPhotoButton.isSelected);
+    self.toolBarView.originalPhotoButton.enabled = count > 0;
+    self.toolBarView.originalPhotoButton.selected = (_isSelectOriginalPhoto && _toolBarView.originalPhotoButton.enabled);
+    self.toolBarView.originalPhotoLabel.hidden = (!_toolBarView.originalPhotoButton.isSelected);
     if (_isSelectOriginalPhoto) {
         [self getSelectedPhotoBytes];
     }
 }
 
-- (void)pushPhotoPrevireViewController:(PMPhotoController *)photoPreviewVc {
-    photoPreviewVc.isSelectOriginalPhoto = _isSelectOriginalPhoto;
-    photoPreviewVc.selectedPhotoArray = self.pickerModelArray;
+- (void)pushPhotoPrevireViewController:(PMPhotoController *)photoPreviewVC {
+    photoPreviewVC.isSelectOriginalPhoto = _isSelectOriginalPhoto;
+    photoPreviewVC.selectedModels = _pickerModels;
     
     __weak typeof(self) weakSelf = self;
-    photoPreviewVc.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        weakSelf.pickerModelArray = newSelectedPhotoArr;
+    photoPreviewVC.returnNewSelectedPhotoArrBlock = ^(NSMutableArray *newSelectedPhotos, BOOL isSelectOriginalPhoto) {
+        weakSelf.pickerModels = newSelectedPhotos;
         weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
         [weakSelf.collectionView reloadData];
         [weakSelf refreshBottomToolBarStatus];
     };
-    photoPreviewVc.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotoArr, BOOL isSelectOriginalPhoto) {
-        if (newSelectedPhotoArr.count != 0) {
-            weakSelf.pickerModelArray = newSelectedPhotoArr;
+    photoPreviewVC.okButtonClickBlock = ^(NSMutableArray *newSelectedPhotos, BOOL isSelectOriginalPhoto) {
+        if (newSelectedPhotos.count != 0) {
+            weakSelf.pickerModels = newSelectedPhotos;
             weakSelf.isSelectOriginalPhoto = isSelectOriginalPhoto;
             [weakSelf okButtonClick];
         }
     };
-    [self.navigationController pushViewController:photoPreviewVc animated:YES];
+    [self.navigationController pushViewController:photoPreviewVC animated:YES];
 }
 
 - (void)getSelectedPhotoBytes {
-    [[PMDataManager manager] getPhotoBytesWithPhotoArray:self.pickerModelArray completion:^(NSString *totalBytes) {
-        self.toolBarView.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)", totalBytes];
+    __weak typeof(self) weakSelf = self;
+    [[PMDataManager manager] getPhotoBytesWithModels:_pickerModels completion:^(NSString *totalBytes) {
+        weakSelf.toolBarView.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)", totalBytes];
     }];
 }
 
@@ -394,7 +450,7 @@ static CGSize kAssetGridThumbnailSize;
     
     NSMutableArray *assets = [NSMutableArray arrayWithCapacity:indexPaths.count];
     for (NSIndexPath *indexPath in indexPaths) {
-        PMPhotoInfoModel *model = _photoArray[indexPath.item];
+        PMPhotoInfoModel *model = _models[indexPath.item];
         [assets addObject:model.asset];
     }
     

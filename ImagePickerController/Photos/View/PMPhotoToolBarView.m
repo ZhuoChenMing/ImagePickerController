@@ -9,20 +9,24 @@
 #import "PMPhotoToolBarView.h"
 #import "PMNavigationController.h"
 
+#import "PMPhotoInfoModel.h"
 #import "PMDataManager.h"
 
 @implementation PMPhotoToolBarView
 
-- (instancetype)initWithNavigation:(PMNavigationController *)navigation
-                selectedPhotoArray:(NSArray *)selectedPhotoArray
-                        photoArray:(NSArray *)photoArray
-          isHavePreviewPhotoButton:(BOOL)isHave {
+- (instancetype)initWithNavigation:(PMNavigationController *)navigation selectedModels:(NSArray *)selectedModels models:(NSArray *)models previewPhoto:(BOOL)previewPhoto {
     if (self = [super init]) {
         CGRect windowRect = [UIScreen mainScreen].bounds;
         CGFloat width = CGRectGetWidth(windowRect);
         CGFloat height = CGRectGetHeight(windowRect);
         
-        self.frame = CGRectMake(0, height - 50, width, 50);
+        if ([PMDataManager manager].notchScreen) {
+            CGFloat bottom = [PMDataManager manager].notchBottom + 50;
+            self.frame = CGRectMake(0, height - bottom, width, bottom);
+        } else {
+            self.frame = CGRectMake(0, height - 50, width, 50);
+        }
+        
         CGFloat rgb = 253 / 255.0;
         self.backgroundColor = [UIColor colorWithRed:rgb green:rgb blue:rgb alpha:1.0];
         
@@ -39,7 +43,7 @@
         [self.okButton setTitle:@"确定" forState:UIControlStateDisabled];
         [self.okButton setTitleColor:navigation.oKButtonTitleColorNormal forState:UIControlStateNormal];
         [self.okButton setTitleColor:navigation.oKButtonTitleColorDisabled forState:UIControlStateDisabled];
-        self.okButton.enabled = selectedPhotoArray.count > 0;
+        self.okButton.enabled = selectedModels.count > 0;
         [self addSubview:_okButton];
         
         self.numberLabel = [[UILabel alloc] init];
@@ -49,8 +53,8 @@
         self.numberLabel.font = [UIFont systemFontOfSize:16];
         self.numberLabel.textColor = [UIColor whiteColor];
         self.numberLabel.textAlignment = NSTextAlignmentCenter;
-        self.numberLabel.text = [NSString stringWithFormat:@"%zd", selectedPhotoArray.count];
-        self.numberLabel.hidden = selectedPhotoArray.count <= 0;
+        self.numberLabel.text = [NSString stringWithFormat:@"%zd", selectedModels.count];
+        self.numberLabel.hidden = selectedModels.count <= 0;
         self.numberLabel.backgroundColor = navigation.oKButtonTitleColorNormal;
         [self addSubview:_numberLabel];
         
@@ -71,18 +75,19 @@
             self.originalPhotoLabel.textAlignment = NSTextAlignmentLeft;
             self.originalPhotoLabel.font = [UIFont systemFontOfSize:16];
             self.originalPhotoLabel.textColor = navigation.oKButtonTitleColorNormal;
-            if (isHave) {
-                [[PMDataManager manager] getPhotoBytesWithPhotoArray:photoArray completion:^(NSString *totalBytes) {
-                    self.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)",totalBytes];
+            if (previewPhoto) {
+                __weak typeof(self) weakSelf = self;
+                [[PMDataManager manager] getPhotoBytesWithModels:models completion:^(NSString *totalBytes) {
+                    weakSelf.originalPhotoLabel.text = [NSString stringWithFormat:@"(%@)",totalBytes];
                 }];
             }
             [self.originalPhotoButton addSubview:_originalPhotoLabel];
             [self addSubview:_originalPhotoButton];
         }
         
-        if (isHave) {
+        if (previewPhoto) {
             self.originalPhotoButton.frame = CGRectMake(60, 0, 130, 50);
-            self.originalPhotoButton.enabled = selectedPhotoArray.count > 0;
+            self.originalPhotoButton.enabled = selectedModels.count > 0;
             
             self.previewButton = [UIButton buttonWithType:UIButtonTypeCustom];
             self.previewButton.frame = CGRectMake(10, 3, 44, 44);
